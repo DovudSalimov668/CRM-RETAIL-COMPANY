@@ -1,0 +1,76 @@
+{% extends 'crm/base.html' %}
+
+{% block title %}Workflow Details - Retail CRM{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pb-2 mb-3 border-bottom" style="border-color: rgba(255,255,255,0.08) !important;">
+    <h1 class="h2" style="color: #e8e4f0;"><i class="fas fa-cogs"></i> {{ workflow.name }}</h1>
+    <a href="{% url 'workflow_list' %}" class="btn btn-outline-primary">Back to List</a>
+</div>
+
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="stat-card">
+            <h6>Status</h6>
+            <h3>
+                {% if workflow.is_active %}
+                    <span class="badge bg-success">Active</span>
+                {% else %}
+                    <span class="badge bg-secondary">Inactive</span>
+                {% endif %}
+            </h3>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stat-card" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); color: #fff !important;">
+            <h6 style="color: #fff !important;">Executions</h6>
+            <h3 style="color: #fff !important;">{{ workflow.execution_count }}</h3>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stat-card" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); color: #fff !important;">
+            <h6 style="color: #fff !important;">Last Executed</h6>
+            <h3 style="font-size: 1rem; color: #fff !important;">{{ workflow.last_executed|date:"M d, Y"|default:"Never" }}</h3>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stat-card" style="background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%); color: #fff !important;">
+            <h6 style="color: #fff !important;">Created</h6>
+            <h3 style="font-size: 1rem; color: #fff !important;">{{ workflow.created_at|date:"M d, Y" }}</h3>
+        </div>
+    </div>
+</div>
+
+<div class="card mb-3">
+    <div class="card-header">
+        <h5 class="mb-0">Workflow Information</h5>
+    </div>
+    <div class="card-body">
+        <div class="row">
+            <div class="col-md-6">
+                <p><strong>Name:</strong> {{ workflow.name }}</p>
+                <p><strong>Trigger Type:</strong> <span class="badge bg-info">{{ workflow.get_trigger_type_display }}</span></p>
+                <p><strong>Action Type:</strong> <span class="badge bg-primary">{{ workflow.get_action_type_display }}</span></p>
+            </div>
+            <div class="col-md-6">
+                <p><strong>Created By:</strong> {{ workflow.created_by.get_full_name|default:workflow.created_by.username }}</p>
+                <p><strong>Created:</strong> {{ workflow.created_at|date:"M d, Y H:i" }}</p>
+                <p><strong>Last Updated:</strong> {{ workflow.updated_at|date:"M d, Y H:i" }}</p>
+            </div>
+        </div>
+        <div class="mt-3">
+            <strong>Description:</strong>
+            <p>{{ workflow.description|default:"No description provided." }}</p>
+        </div>
+        <div class="mt-3">
+            <strong>Trigger Conditions (JSON):</strong>
+            <pre class="mt-2 p-3" style="background-color: rgba(255,255,255,0.05); border-radius: 5px; color: #e8e4f0;">{{ workflow.trigger_conditions|default:"{}" }}</pre>
+        </div>
+        <div class="mt-3">
+            <strong>Action Config (JSON):</strong>
+            <pre class="mt-2 p-3" style="background-color: rgba(255,255,255,0.05); border-radius: 5px; color: #e8e4f0;">{{ workflow.action_config|default:"{}" }}</pre>
+        </div>
+    </div>
+</div>
+{% endblock %}
+

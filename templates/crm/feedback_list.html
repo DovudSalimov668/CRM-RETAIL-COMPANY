@@ -1,0 +1,117 @@
+{% extends 'crm/base.html' %}
+
+{% block title %}Customer Feedback - Retail CRM{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pb-2 mb-3 border-bottom" style="border-color: rgba(255,255,255,0.08) !important;">
+    <h1 class="h2" style="color: #e8e4f0;"><i class="fas fa-comment-dots"></i> Customer Feedback</h1>
+</div>
+
+<!-- Filters -->
+<div class="card mb-3">
+    <div class="card-body">
+        <form method="get" class="row g-3">
+            <div class="col-md-6">
+                <label class="form-label">Feedback Type</label>
+                <select name="type" class="form-control">
+                    <option value="">All Types</option>
+                    <option value="product" {% if type_filter == 'product' %}selected{% endif %}>Product</option>
+                    <option value="service" {% if type_filter == 'service' %}selected{% endif %}>Service</option>
+                    <option value="order" {% if type_filter == 'order' %}selected{% endif %}>Order</option>
+                    <option value="general" {% if type_filter == 'general' %}selected{% endif %}>General</option>
+                </select>
+            </div>
+            <div class="col-md-6">
+                <label class="form-label">&nbsp;</label>
+                <button type="submit" class="btn btn-primary w-100">
+                    <i class="fas fa-filter"></i> Filter
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>Customer</th>
+                        <th>Type</th>
+                        <th>Rating</th>
+                        <th>Comment</th>
+                        <th>Order/Product</th>
+                        <th>Public</th>
+                        <th>Created</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for feedback in feedbacks %}
+                    <tr>
+                        <td><strong>{{ feedback.customer.get_full_name }}</strong></td>
+                        <td><span class="badge bg-info">{{ feedback.get_feedback_type_display }}</span></td>
+                        <td>
+                            {% if feedback.rating == 5 %}
+                                <span class="badge bg-success">★★★★★</span>
+                            {% elif feedback.rating == 4 %}
+                                <span class="badge bg-success">★★★★☆</span>
+                            {% elif feedback.rating == 3 %}
+                                <span class="badge bg-warning">★★★☆☆</span>
+                            {% elif feedback.rating == 2 %}
+                                <span class="badge bg-warning">★★☆☆☆</span>
+                            {% else %}
+                                <span class="badge bg-danger">★☆☆☆☆</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ feedback.comment|truncatewords:10 }}</td>
+                        <td>
+                            {% if feedback.order %}
+                                <a href="{% url 'order_detail' feedback.order.pk %}">{{ feedback.order.order_number }}</a>
+                            {% elif feedback.product %}
+                                {{ feedback.product.name }}
+                            {% else %}
+                                -
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if feedback.is_public %}
+                                <span class="badge bg-success">Yes</span>
+                            {% else %}
+                                <span class="badge bg-secondary">No</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ feedback.created_at|date:"M d, Y" }}</td>
+                        <td>
+                            <a href="{% url 'feedback_detail' feedback.pk %}" class="btn btn-sm btn-outline-primary">
+                                <i class="fas fa-eye"></i> View
+                            </a>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="8" class="text-center">No feedback found.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        
+        {% if feedbacks.has_other_pages %}
+        <nav aria-label="Page navigation">
+            <ul class="pagination justify-content-center">
+                {% if feedbacks.has_previous %}
+                    <li class="page-item"><a class="page-link" href="?page={{ feedbacks.previous_page_number }}{% if type_filter %}&type={{ type_filter }}{% endif %}">Previous</a></li>
+                {% endif %}
+                <li class="page-item active"><span class="page-link">Page {{ feedbacks.number }} of {{ feedbacks.paginator.num_pages }}</span></li>
+                {% if feedbacks.has_next %}
+                    <li class="page-item"><a class="page-link" href="?page={{ feedbacks.next_page_number }}{% if type_filter %}&type={{ type_filter }}{% endif %}">Next</a></li>
+                {% endif %}
+            </ul>
+        </nav>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+

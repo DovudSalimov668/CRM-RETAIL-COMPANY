@@ -1,0 +1,55 @@
+{% extends 'crm/base.html' %}
+
+{% block title %}Deal Detail - Retail CRM{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pb-2 mb-3 border-bottom">
+    <h1 class="h2"><i class="fas fa-handshake"></i> {{ deal.title }}</h1>
+    <div>
+        <a href="{% url 'deal_update' deal.pk %}" class="btn btn-primary"><i class="fas fa-edit"></i> Edit</a>
+        <a href="{% url 'deal_list' %}" class="btn btn-secondary">Back to List</a>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-8">
+        <div class="card mb-4">
+            <div class="card-header"><h5 class="mb-0">Deal Information</h5></div>
+            <div class="card-body">
+                <table class="table">
+                    <tr><th>Title:</th><td>{{ deal.title }}</td></tr>
+                    <tr><th>Customer:</th><td><a href="{% url 'customer_detail' deal.customer.pk %}">{{ deal.customer.first_name }} {{ deal.customer.last_name }}</a></td></tr>
+                    <tr><th>Amount:</th><td><strong>${{ deal.amount|floatformat:2 }}</strong></td></tr>
+                    <tr><th>Stage:</th><td><span class="badge bg-{% if deal.stage == 'closed_won' %}success{% elif deal.stage == 'closed_lost' %}danger{% else %}info{% endif %}">{{ deal.get_stage_display }}</span></td></tr>
+                    <tr><th>Probability:</th><td>{{ deal.probability }}%</td></tr>
+                    <tr><th>Weighted Value:</th><td>${{ deal.get_weighted_value|floatformat:2 }}</td></tr>
+                    <tr><th>Expected Close Date:</th><td>{{ deal.expected_close_date|date:"M d, Y" }}</td></tr>
+                    <tr><th>Assigned To:</th><td>{{ deal.assigned_to.get_full_name|default:deal.assigned_to.username|default:"-" }}</td></tr>
+                    {% if deal.closed_at %}<tr><th>Closed At:</th><td>{{ deal.closed_at|date:"M d, Y" }}</td></tr>{% endif %}
+                    {% if deal.description %}<tr><th>Description:</th><td>{{ deal.description }}</td></tr>{% endif %}
+                </table>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header"><h5 class="mb-0">Related Quotes</h5></div>
+            <div class="card-body">
+                {% if quotes %}
+                <div class="list-group">
+                    {% for quote in quotes %}
+                    <a href="{% url 'quote_detail' quote.pk %}" class="list-group-item list-group-item-action">
+                        <strong>{{ quote.quote_number }}</strong><br>
+                        <small>${{ quote.total_amount|floatformat:2 }} - {{ quote.get_status_display }}</small>
+                    </a>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <p class="text-muted">No quotes for this deal</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+

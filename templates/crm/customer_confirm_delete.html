@@ -1,0 +1,42 @@
+{% extends 'crm/base.html' %}
+
+{% block title %}Delete Customer - Retail CRM{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pb-2 mb-3 border-bottom">
+    <h1 class="h2"><i class="fas fa-trash"></i> Delete Customer</h1>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        <div class="alert alert-danger">
+            <h5><i class="fas fa-exclamation-triangle"></i> Warning!</h5>
+            <p>Are you sure you want to delete <strong>{{ customer.first_name }} {{ customer.last_name }}</strong>?</p>
+            <p class="mb-0">This action cannot be undone. All related data (orders, interactions) will also be deleted.</p>
+        </div>
+        
+        <div class="card mb-3">
+            <div class="card-header">
+                <h6 class="mb-0">Customer Information</h6>
+            </div>
+            <div class="card-body">
+                <p><strong>Name:</strong> {{ customer.first_name }} {{ customer.last_name }}</p>
+                <p><strong>Email:</strong> {{ customer.email }}</p>
+                <p><strong>Phone:</strong> {{ customer.phone }}</p>
+                <p><strong>Total Orders:</strong> {{ customer.get_total_orders }}</p>
+                <p><strong>Total Spent:</strong> ${{ customer.get_total_spent|floatformat:2 }}</p>
+            </div>
+        </div>
+        
+        <form method="post">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-danger">
+                <i class="fas fa-trash"></i> Yes, Delete This Customer
+            </button>
+            <a href="{% url 'customer_list' %}" class="btn btn-secondary">
+                <i class="fas fa-times"></i> Cancel
+            </a>
+        </form>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,98 @@
+{% extends 'crm/base.html' %}
+
+{% block title %}Cart Abandonment - Retail CRM{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pb-2 mb-3 border-bottom" style="border-color: rgba(255,255,255,0.08) !important;">
+    <h1 class="h2" style="color: #e8e4f0;"><i class="fas fa-shopping-cart"></i> Cart Abandonment</h1>
+</div>
+
+<div class="row mb-4">
+    <div class="col-md-4">
+        <div class="stat-card">
+            <h6>Total Abandoned Carts</h6>
+            <h3>{{ abandoned_carts.paginator.count }}</h3>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="stat-card" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); color: #fff !important;">
+            <h6 style="color: #fff !important;">Total Value</h6>
+            <h3 style="color: #fff !important;">${{ total_value|floatformat:2 }}</h3>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="stat-card" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); color: #fff !important;">
+            <h6 style="color: #fff !important;">Recovery Rate</h6>
+            <h3 style="color: #fff !important;">0%</h3>
+        </div>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>Customer</th>
+                        <th>Items</th>
+                        <th>Total Value</th>
+                        <th>Abandoned At</th>
+                        <th>Recovered</th>
+                        <th>Reminder Sent</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for cart in abandoned_carts %}
+                    <tr>
+                        <td><strong>{{ cart.customer.get_full_name }}</strong></td>
+                        <td>{{ cart.cart_data|length }} items</td>
+                        <td>${{ cart.total_value|floatformat:2 }}</td>
+                        <td>{{ cart.abandoned_at|date:"M d, Y H:i" }}</td>
+                        <td>
+                            {% if cart.recovered %}
+                                <span class="badge bg-success">Yes</span>
+                            {% else %}
+                                <span class="badge bg-warning">No</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if cart.reminder_sent %}
+                                <span class="badge bg-info">Sent</span>
+                            {% else %}
+                                <span class="badge bg-secondary">Not Sent</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <a href="{% url 'customer_detail' cart.customer.pk %}" class="btn btn-sm btn-outline-primary">
+                                <i class="fas fa-user"></i> View Customer
+                            </a>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="7" class="text-center">No abandoned carts found.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        
+        {% if abandoned_carts.has_other_pages %}
+        <nav aria-label="Page navigation">
+            <ul class="pagination justify-content-center">
+                {% if abandoned_carts.has_previous %}
+                    <li class="page-item"><a class="page-link" href="?page={{ abandoned_carts.previous_page_number }}">Previous</a></li>
+                {% endif %}
+                <li class="page-item active"><span class="page-link">Page {{ abandoned_carts.number }} of {{ abandoned_carts.paginator.num_pages }}</span></li>
+                {% if abandoned_carts.has_next %}
+                    <li class="page-item"><a class="page-link" href="?page={{ abandoned_carts.next_page_number }}">Next</a></li>
+                {% endif %}
+            </ul>
+        </nav>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+

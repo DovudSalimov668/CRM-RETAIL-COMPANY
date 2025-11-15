@@ -1,0 +1,150 @@
+
+<!-- ========================================== -->
+<!-- FILE 3: customer_list.html -->
+<!-- LOCATION: C:\Users\User\Desktop\CRM\crm\templates\crm\customer_list.html -->
+<!-- LINKED TO: views.customer_list -->
+<!-- ========================================== -->
+{% extends 'crm/base.html' %}
+{% block title %}Customers - Retail CRM{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pb-2 mb-3 border-bottom">
+    <h1 class="h2"><i class="fas fa-users"></i> Customers</h1>
+    <div class="btn-toolbar mb-2 mb-md-0">
+        <a href="{% url 'customer_export_csv' %}" class="btn btn-sm btn-outline-secondary me-2">
+            <i class="fas fa-download"></i> Export CSV
+        </a>
+        <a href="{% url 'customer_create' %}" class="btn btn-primary">
+            <i class="fas fa-plus"></i> Add Customer
+        </a>
+    </div>
+</div>
+<div class="card mb-3">
+    <div class="card-body">
+        <form method="get" class="row g-3">
+            <div class="col-md-5">
+                <input type="text" name="q" class="form-control" placeholder="Search by name, email, phone, or company..." value="{{ query }}">
+            </div>
+            <div class="col-md-3">
+                <select name="status" class="form-control">
+                    <option value="">All Statuses</option>
+                    <option value="lead" {% if status_filter == 'lead' %}selected{% endif %}>Lead</option>
+                    <option value="prospect" {% if status_filter == 'prospect' %}selected{% endif %}>Prospect</option>
+                    <option value="active" {% if status_filter == 'active' %}selected{% endif %}>Active</option>
+                    <option value="inactive" {% if status_filter == 'inactive' %}selected{% endif %}>Inactive</option>
+                    <option value="vip" {% if status_filter == 'vip' %}selected{% endif %}>VIP</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <select name="source" class="form-control">
+                    <option value="">All Sources</option>
+                    <option value="website" {% if source_filter == 'website' %}selected{% endif %}>Website</option>
+                    <option value="referral" {% if source_filter == 'referral' %}selected{% endif %}>Referral</option>
+                    <option value="social_media" {% if source_filter == 'social_media' %}selected{% endif %}>Social Media</option>
+                    <option value="advertisement" {% if source_filter == 'advertisement' %}selected{% endif %}>Advertisement</option>
+                    <option value="walk_in" {% if source_filter == 'walk_in' %}selected{% endif %}>Walk-in</option>
+                    <option value="other" {% if source_filter == 'other' %}selected{% endif %}>Other</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <button type="submit" class="btn btn-primary w-100">
+                    <i class="fas fa-search"></i> Search
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+<div class="card">
+    <div class="card-header">
+        <h5 class="mb-0">Customer List ({{ customers.paginator.count }} total)</h5>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th></th>
+                        <th>Name</th>
+                        <th>Email</th>
+                        <th>Phone</th>
+                        <th>Company</th>
+                        <th>Type</th>
+                        <th>Status</th>
+                        <th>Source</th>
+                        <th>Joined</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for customer in customers %}
+                    <tr>
+                        <td>
+                            {% if customer.profile_image %}
+                                <img src="{{ customer.profile_image.url }}" alt="{{ customer.get_full_name }}" style="height:40px;width:40px;object-fit:cover;border-radius:50%;background:#fff;border:2px solid #5a1a8b;">
+                            {% else %}
+                                <img src="https://ui-avatars.com/api/?name={{ customer.first_name }}+{{ customer.last_name }}&background=5a1a8b&color=fff&size=40" alt="{{ customer.get_full_name }}" style="height:40px;width:40px;object-fit:cover;border-radius:50%;background:#fff;border:2px solid #5a1a8b;">
+                            {% endif %}
+                        </td>
+                        <td><strong><a href="{% url 'customer_detail' customer.pk %}" style="color: #5a1a8b; text-decoration: none;" onmouseover="this.style.textDecoration='underline'; this.style.color='#47136d';" onmouseout="this.style.textDecoration='none'; this.style.color='#5a1a8b';">{{ customer.first_name }} {{ customer.last_name }}</a></strong></td>
+                        <td>{{ customer.email }}</td>
+                        <td>{{ customer.phone }}</td>
+                        <td>{{ customer.company_name|default:"-" }}</td>
+                        <td>{{ customer.get_customer_type_display }}</td>
+                        <td>
+                            {% if customer.status == 'active' %}
+                                <span class="badge bg-success">Active</span>
+                            {% elif customer.status == 'vip' %}
+                                <span class="badge bg-warning">VIP</span>
+                            {% elif customer.status == 'lead' %}
+                                <span class="badge bg-info">Lead</span>
+                            {% else %}
+                                <span class="badge bg-secondary">{{ customer.get_status_display }}</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ customer.get_source_display }}</td>
+                        <td>{{ customer.date_joined|date:"M d, Y" }}</td>
+                        <td>
+                            <a href="{% url 'customer_detail' customer.pk %}" class="btn btn-sm btn-primary"><i class="fas fa-eye"></i></a>
+                            <a href="{% url 'customer_update' customer.pk %}" class="btn btn-sm btn-secondary"><i class="fas fa-edit"></i></a>
+                            <a href="{% url 'customer_delete' customer.pk %}" class="btn btn-sm btn-danger"><i class="fas fa-trash"></i></a>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="10" class="text-center text-muted py-4">
+                            No customers found. <a href="{% url 'customer_create' %}" style="color: #5a1a8b;">Add your first customer</a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        
+        <!-- Pagination -->
+        {% if customers.has_other_pages %}
+        <nav aria-label="Page navigation">
+            <ul class="pagination justify-content-center mt-3">
+                {% if customers.has_previous %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page=1{% if query %}&q={{ query }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}{% if source_filter %}&source={{ source_filter }}{% endif %}">First</a>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ customers.previous_page_number }}{% if query %}&q={{ query }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}{% if source_filter %}&source={{ source_filter }}{% endif %}">Previous</a>
+                    </li>
+                {% endif %}
+                <li class="page-item active">
+                    <span class="page-link">Page {{ customers.number }} of {{ customers.paginator.num_pages }}</span>
+                </li>
+                {% if customers.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ customers.next_page_number }}{% if query %}&q={{ query }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}{% if source_filter %}&source={{ source_filter }}{% endif %}">Next</a>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ customers.paginator.num_pages }}{% if query %}&q={{ query }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}{% if source_filter %}&source={{ source_filter }}{% endif %}">Last</a>
+                    </li>
+                {% endif %}
+            </ul>
+        </nav>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

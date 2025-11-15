@@ -1,0 +1,41 @@
+{% extends 'crm/base.html' %}
+
+{% block title %}{{ action }} Quote - Retail CRM{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pb-2 mb-3 border-bottom">
+    <h1 class="h2"><i class="fas fa-file-invoice-dollar"></i> {{ action }} Quote</h1>
+    <a href="{% url 'quote_list' %}" class="btn btn-secondary">Back to List</a>
+</div>
+
+<div class="card">
+    <div class="card-header"><h5 class="mb-0">Quote Information</h5></div>
+    <div class="card-body">
+        <form method="post">
+            {% csrf_token %}
+            <div class="row">
+                <div class="col-md-6 mb-3"><label class="form-label">Quote Number *</label>{{ form.quote_number }}{% if form.quote_number.errors %}<div class="text-danger">{{ form.quote_number.errors }}</div>{% endif %}</div>
+                <div class="col-md-6 mb-3"><label class="form-label">Customer *</label>{{ form.customer }}{% if form.customer.errors %}<div class="text-danger">{{ form.customer.errors }}</div>{% endif %}</div>
+            </div>
+            <div class="row">
+                <div class="col-md-6 mb-3"><label class="form-label">Deal</label>{{ form.deal }}{% if form.deal.errors %}<div class="text-danger">{{ form.deal.errors }}</div>{% endif %}</div>
+                <div class="col-md-6 mb-3"><label class="form-label">Status *</label>{{ form.status }}{% if form.status.errors %}<div class="text-danger">{{ form.status.errors }}</div>{% endif %}</div>
+            </div>
+            <div class="row">
+                <div class="col-md-4 mb-3"><label class="form-label">Subtotal *</label>{{ form.subtotal }}{% if form.subtotal.errors %}<div class="text-danger">{{ form.subtotal.errors }}</div>{% endif %}</div>
+                <div class="col-md-4 mb-3"><label class="form-label">Tax *</label>{{ form.tax }}{% if form.tax.errors %}<div class="text-danger">{{ form.tax.errors }}</div>{% endif %}</div>
+                <div class="col-md-4 mb-3"><label class="form-label">Discount *</label>{{ form.discount }}{% if form.discount.errors %}<div class="text-danger">{{ form.discount.errors }}</div>{% endif %}</div>
+            </div>
+            <div class="row">
+                <div class="col-md-6 mb-3"><label class="form-label">Valid Until *</label>{{ form.valid_until }}{% if form.valid_until.errors %}<div class="text-danger">{{ form.valid_until.errors }}</div>{% endif %}</div>
+            </div>
+            <div class="mb-3"><label class="form-label">Notes</label>{{ form.notes }}{% if form.notes.errors %}<div class="text-danger">{{ form.notes.errors }}</div>{% endif %}</div>
+            <div class="mt-4">
+                <button type="submit" class="btn btn-primary"><i class="fas fa-save"></i> Save</button>
+                <a href="{% url 'quote_list' %}" class="btn btn-secondary">Cancel</a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+

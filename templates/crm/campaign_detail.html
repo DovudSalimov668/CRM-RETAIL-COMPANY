@@ -1,0 +1,65 @@
+{% extends 'crm/base.html' %}
+
+{% block title %}Campaign Details - Retail CRM{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pb-2 mb-3 border-bottom" style="border-color: rgba(255,255,255,0.08) !important;">
+    <h1 class="h2" style="color: #e8e4f0;"><i class="fas fa-bullhorn"></i> {{ campaign.name }}</h1>
+    <a href="{% url 'campaign_list' %}" class="btn btn-outline-primary">Back to List</a>
+</div>
+
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="stat-card">
+            <h6>Sent</h6>
+            <h3>{{ campaign.sent_count }}</h3>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stat-card" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); color: #fff !important;">
+            <h6 style="color: #fff !important;">Opened</h6>
+            <h3 style="color: #fff !important;">{{ campaign.opened_count }}</h3>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stat-card" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); color: #fff !important;">
+            <h6 style="color: #fff !important;">Clicked</h6>
+            <h3 style="color: #fff !important;">{{ campaign.clicked_count }}</h3>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stat-card" style="background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%); color: #fff !important;">
+            <h6 style="color: #fff !important;">Open Rate</h6>
+            <h3 style="color: #fff !important;">{{ campaign.get_open_rate|floatformat:1 }}%</h3>
+        </div>
+    </div>
+</div>
+
+<div class="card mb-3">
+    <div class="card-header">
+        <h5 class="mb-0">Campaign Information</h5>
+    </div>
+    <div class="card-body">
+        <div class="row">
+            <div class="col-md-6">
+                <p><strong>Type:</strong> <span class="badge bg-info">{{ campaign.get_campaign_type_display }}</span></p>
+                <p><strong>Status:</strong> <span class="badge bg-{{ campaign.status|yesno:'success,warning' }}">{{ campaign.get_status_display }}</span></p>
+                <p><strong>Subject:</strong> {{ campaign.subject }}</p>
+                <p><strong>Target Segment:</strong> {{ campaign.target_segment.name|default:"All Customers" }}</p>
+            </div>
+            <div class="col-md-6">
+                <p><strong>Created:</strong> {{ campaign.created_at|date:"M d, Y H:i" }}</p>
+                <p><strong>Created By:</strong> {{ campaign.created_by.get_full_name|default:campaign.created_by.username }}</p>
+                <p><strong>Scheduled Time:</strong> {{ campaign.scheduled_time|date:"M d, Y H:i"|default:"Not scheduled" }}</p>
+            </div>
+        </div>
+        <div class="mt-3">
+            <strong>Content:</strong>
+            <div class="mt-2 p-3" style="background-color: rgba(255,255,255,0.05); border-radius: 5px;">
+                {{ campaign.content|linebreaks }}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+

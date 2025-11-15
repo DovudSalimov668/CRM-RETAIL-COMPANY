@@ -1,0 +1,38 @@
+{% extends 'crm/base.html' %}
+
+{% block title %}{{ action }} Deal - Retail CRM{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pb-2 mb-3 border-bottom">
+    <h1 class="h2"><i class="fas fa-handshake"></i> {{ action }} Deal</h1>
+    <a href="{% url 'deal_list' %}" class="btn btn-secondary">Back to List</a>
+</div>
+
+<div class="card">
+    <div class="card-header"><h5 class="mb-0">Deal Information</h5></div>
+    <div class="card-body">
+        <form method="post">
+            {% csrf_token %}
+            <div class="mb-3"><label class="form-label">Title *</label>{{ form.title }}{% if form.title.errors %}<div class="text-danger">{{ form.title.errors }}</div>{% endif %}</div>
+            <div class="row">
+                <div class="col-md-6 mb-3"><label class="form-label">Customer *</label>{{ form.customer }}{% if form.customer.errors %}<div class="text-danger">{{ form.customer.errors }}</div>{% endif %}</div>
+                <div class="col-md-6 mb-3"><label class="form-label">Assigned To</label>{{ form.assigned_to }}{% if form.assigned_to.errors %}<div class="text-danger">{{ form.assigned_to.errors }}</div>{% endif %}</div>
+            </div>
+            <div class="row">
+                <div class="col-md-6 mb-3"><label class="form-label">Amount *</label>{{ form.amount }}{% if form.amount.errors %}<div class="text-danger">{{ form.amount.errors }}</div>{% endif %}</div>
+                <div class="col-md-6 mb-3"><label class="form-label">Expected Close Date *</label>{{ form.expected_close_date }}{% if form.expected_close_date.errors %}<div class="text-danger">{{ form.expected_close_date.errors }}</div>{% endif %}</div>
+            </div>
+            <div class="row">
+                <div class="col-md-6 mb-3"><label class="form-label">Stage *</label>{{ form.stage }}{% if form.stage.errors %}<div class="text-danger">{{ form.stage.errors }}</div>{% endif %}</div>
+                <div class="col-md-6 mb-3"><label class="form-label">Probability (%) *</label>{{ form.probability }}{% if form.probability.errors %}<div class="text-danger">{{ form.probability.errors }}</div>{% endif %}</div>
+            </div>
+            <div class="mb-3"><label class="form-label">Description</label>{{ form.description }}{% if form.description.errors %}<div class="text-danger">{{ form.description.errors }}</div>{% endif %}</div>
+            <div class="mt-4">
+                <button type="submit" class="btn btn-primary"><i class="fas fa-save"></i> Save</button>
+                <a href="{% url 'deal_list' %}" class="btn btn-secondary">Cancel</a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+

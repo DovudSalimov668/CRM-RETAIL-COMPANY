@@ -1,0 +1,136 @@
+{% extends 'crm/customer/base_customer.html' %}
+
+{% block title %}Edit Profile{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pb-2 mb-3 border-bottom">
+    <h1 class="h2"><i class="fas fa-user-edit"></i> Edit Profile</h1>
+    <a href="{% url 'customer_portal' %}" class="btn btn-secondary">Back to Portal</a>
+</div>
+
+<div class="row">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Personal Information</h5>
+            </div>
+            <div class="card-body">
+                <form method="post" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">First Name *</label>
+                            {{ form.first_name }}
+                            {% if form.first_name.errors %}
+                                <div class="text-danger">{{ form.first_name.errors }}</div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Last Name *</label>
+                            {{ form.last_name }}
+                            {% if form.last_name.errors %}
+                                <div class="text-danger">{{ form.last_name.errors }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Email *</label>
+                            {{ form.email }}
+                            {% if form.email.errors %}
+                                <div class="text-danger">{{ form.email.errors }}</div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Phone *</label>
+                            {{ form.phone }}
+                            {% if form.phone.errors %}
+                                <div class="text-danger">{{ form.phone.errors }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Address</label>
+                        {{ form.address }}
+                        {% if form.address.errors %}
+                            <div class="text-danger">{{ form.address.errors }}</div>
+                        {% endif %}
+                    </div>
+                    <div class="row">
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label">City</label>
+                            {{ form.city }}
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label">State</label>
+                            {{ form.state }}
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label">Postal Code</label>
+                            {{ form.postal_code }}
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Country</label>
+                            {{ form.country }}
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Company Name</label>
+                            {{ form.company_name }}
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Notes</label>
+                        {{ form.notes }}
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Profile Picture</label>
+                        {% if customer.profile_image %}
+                            <div class="mb-2">
+                                <img src="{{ customer.profile_image.url }}" alt="Profile Picture" class="img-thumbnail" style="height: 128px; width: 128px; object-fit: cover; border-radius: 50%; background: #111;">
+                            </div>
+                        {% else %}
+                            <div class="mb-2">
+                                <img src="https://ui-avatars.com/api/?name={{ customer.first_name|default:'U' }}+{{ customer.last_name|default:'S' }}&background=5a1a8b&color=fff&size=128" alt="Profile Picture" class="img-thumbnail" style="height:128px;width:128px;object-fit:cover;border-radius:50%;background:#111;">
+                            </div>
+                        {% endif %}
+                        {{ form.profile_image }}
+                        {% if form.profile_image.errors %}
+                            <div class="text-danger">{{ form.profile_image.errors }}</div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="mt-4">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save"></i> Save Changes
+                        </button>
+                        <a href="{% url 'customer_portal' %}" class="btn btn-secondary">Cancel</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <h6 class="mb-0">Account Information</h6>
+            </div>
+            <div class="card-body">
+                <p><strong>Username:</strong> {{ user.username }}</p>
+                <p><strong>Member Since:</strong> {{ customer.date_joined|date:"M d, Y" }}</p>
+                <p><strong>Status:</strong> 
+                    <span class="badge bg-{% if customer.status == 'active' %}success{% elif customer.status == 'vip' %}warning{% else %}secondary{% endif %}">
+                        {{ customer.get_status_display }}
+                    </span>
+                </p>
+                {% if customer.assigned_to %}
+                <p><strong>Account Manager:</strong> {{ customer.assigned_to.get_full_name|default:customer.assigned_to.username }}</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+

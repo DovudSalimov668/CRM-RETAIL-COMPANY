@@ -1,0 +1,131 @@
+{% extends 'crm/base.html' %}
+
+{% block title %}{{ action }} Order - Retail CRM{% endblock %}
+
+{% block content %}
+<script>
+    function calculateTotal() {
+        const subtotal = parseFloat(document.getElementById('id_subtotal').value) || 0;
+        const tax = parseFloat(document.getElementById('id_tax').value) || 0;
+        const discount = parseFloat(document.getElementById('id_discount').value) || 0;
+        const shipping = parseFloat(document.getElementById('id_shipping_cost').value) || 0;
+        const total = subtotal + tax + shipping - discount;
+        
+        const totalDisplay = document.getElementById('total_display');
+        if (totalDisplay) {
+            totalDisplay.value = '$' + total.toFixed(2);
+        }
+    }
+    
+    document.addEventListener('DOMContentLoaded', function() {
+        const inputs = ['id_subtotal', 'id_tax', 'id_discount', 'id_shipping_cost'];
+        inputs.forEach(id => {
+            const element = document.getElementById(id);
+            if (element) {
+                element.addEventListener('input', calculateTotal);
+            }
+        });
+        calculateTotal();
+    });
+</script>
+
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pb-2 mb-3 border-bottom">
+    <h1 class="h2"><i class="fas fa-shopping-cart"></i> {{ action }} Order</h1>
+    <a href="{% url 'order_list' %}" class="btn btn-secondary">Back to List</a>
+</div>
+
+<div class="card">
+    <div class="card-header">
+        <h5 class="mb-0">Order Information</h5>
+    </div>
+    <div class="card-body">
+        <form method="post">
+            {% csrf_token %}
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">Customer *</label>
+                    {{ form.customer }}
+                    {% if form.customer.errors %}<div class="text-danger">{{ form.customer.errors }}</div>{% endif %}
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">Order Number *</label>
+                    {{ form.order_number }}
+                    {% if form.order_number.errors %}<div class="text-danger">{{ form.order_number.errors }}</div>{% endif %}
+                    <small class="form-text text-muted">Example: ORD-001, ORD-002, etc.</small>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">Status *</label>
+                    {{ form.status }}
+                    {% if form.status.errors %}<div class="text-danger">{{ form.status.errors }}</div>{% endif %}
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">Payment Status *</label>
+                    {{ form.payment_status }}
+                    {% if form.payment_status.errors %}<div class="text-danger">{{ form.payment_status.errors }}</div>{% endif %}
+                </div>
+            </div>
+            <hr>
+            <h6 class="mb-3">Pricing Information</h6>
+            <div class="row">
+                <div class="col-md-3 mb-3">
+                    <label class="form-label">Subtotal *</label>
+                    {{ form.subtotal }}
+                    {% if form.subtotal.errors %}<div class="text-danger">{{ form.subtotal.errors }}</div>{% endif %}
+                </div>
+                <div class="col-md-3 mb-3">
+                    <label class="form-label">Tax *</label>
+                    {{ form.tax }}
+                    {% if form.tax.errors %}<div class="text-danger">{{ form.tax.errors }}</div>{% endif %}
+                </div>
+                <div class="col-md-3 mb-3">
+                    <label class="form-label">Discount *</label>
+                    {{ form.discount }}
+                    {% if form.discount.errors %}<div class="text-danger">{{ form.discount.errors }}</div>{% endif %}
+                </div>
+                <div class="col-md-3 mb-3">
+                    <label class="form-label">Shipping Cost *</label>
+                    {{ form.shipping_cost }}
+                    {% if form.shipping_cost.errors %}<div class="text-danger">{{ form.shipping_cost.errors }}</div>{% endif %}
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">Total Amount</label>
+                    <input type="text" class="form-control" id="total_display" value="{% if action == 'Update' and order %}${{ order.total_amount|floatformat:2 }}{% else %}$0.00{% endif %}" readonly style="background: rgba(18,14,28,0.8); color: #e8e4f0;">
+                    <small class="form-text text-muted">Calculated automatically (Subtotal + Tax + Shipping - Discount)</small>
+                </div>
+            </div>
+            <hr>
+            <h6 class="mb-3">Shipping Information</h6>
+            <div class="mb-3">
+                <label class="form-label">Shipping Address</label>
+                {{ form.shipping_address }}
+                {% if form.shipping_address.errors %}<div class="text-danger">{{ form.shipping_address.errors }}</div>{% endif %}
+            </div>
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">Tracking Number</label>
+                    {{ form.tracking_number }}
+                    {% if form.tracking_number.errors %}<div class="text-danger">{{ form.tracking_number.errors }}</div>{% endif %}
+                </div>
+            </div>
+            <hr>
+            <div class="mb-3">
+                <label class="form-label">Notes</label>
+                {{ form.notes }}
+                {% if form.notes.errors %}<div class="text-danger">{{ form.notes.errors }}</div>{% endif %}
+            </div>
+            <div class="mt-4">
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-save"></i> Save Order
+                </button>
+                <a href="{% url 'order_list' %}" class="btn btn-secondary">
+                    <i class="fas fa-times"></i> Cancel
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

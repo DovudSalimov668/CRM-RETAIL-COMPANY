@@ -1,0 +1,121 @@
+{% extends 'crm/customer/base_customer.html' %}
+
+{% block title %}Shopping Cart{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pb-2 mb-3 border-bottom">
+    <h1 class="h2"><i class="fas fa-shopping-cart"></i> Shopping Cart</h1>
+    <a href="{% url 'product_catalog' %}" class="btn btn-outline-primary">
+        <i class="fas fa-arrow-left"></i> Continue Shopping
+    </a>
+</div>
+
+{% if cart_items %}
+<div class="row">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Cart Items</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Product</th>
+                                <th>Price</th>
+                                <th>Quantity</th>
+                                <th>Total</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in cart_items %}
+                            <tr>
+                                <td>
+                                    <div class="d-flex">
+                                        {% if item.product.image_url %}
+                                        <img src="{{ item.product.image_url }}" style="width: 60px; height: 60px; object-fit: cover;" class="me-3 rounded">
+                                        {% endif %}
+                                        <div>
+                                            <strong>{{ item.product.name }}</strong><br>
+                                            <small class="text-muted">{{ item.product.sku }}</small>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>${{ item.price|floatformat:2 }}</td>
+                                <td>
+                                    <form method="post" action="{% url 'update_cart' item.product.pk %}" class="d-inline">
+                                        {% csrf_token %}
+                                        <input type="number" name="quantity" value="{{ item.quantity }}" min="1" max="{{ item.product.stock_quantity }}" class="form-control form-control-sm" style="width: 80px; display: inline-block;" onchange="this.form.submit()">
+                                    </form>
+                                </td>
+                                <td><strong>${{ item.total|floatformat:2 }}</strong></td>
+                                <td>
+                                    <a href="{% url 'remove_from_cart' item.product.pk %}" class="btn btn-sm btn-danger" onclick="return confirm('Remove this item?')">
+                                        <i class="fas fa-trash"></i>
+                                    </a>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Order Summary</h5>
+            </div>
+            <div class="card-body">
+                <table class="table table-sm">
+                    <tr>
+                        <td>Subtotal:</td>
+                        <td class="text-end">${{ subtotal|floatformat:2 }}</td>
+                    </tr>
+                    <tr>
+                        <td>Tax (10%):</td>
+                        <td class="text-end">${{ tax|floatformat:2 }}</td>
+                    </tr>
+                    <tr>
+                        <td>Shipping:</td>
+                        <td class="text-end">
+                            {% if shipping > 0 %}
+                                ${{ shipping|floatformat:2 }}
+                                <small class="text-muted d-block">Free shipping on orders over $100</small>
+                            {% else %}
+                                <span class="text-success">FREE</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    <tr class="table-active">
+                        <td><strong>Total:</strong></td>
+                        <td class="text-end"><strong>${{ total|floatformat:2 }}</strong></td>
+                    </tr>
+                </table>
+                <div class="d-grid gap-2 mt-3">
+                    <a href="{% url 'checkout' %}" class="btn btn-primary btn-lg">
+                        <i class="fas fa-credit-card"></i> Proceed to Checkout
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% else %}
+<div class="card">
+    <div class="card-body text-center py-5">
+        <i class="fas fa-shopping-cart fa-4x text-muted mb-3"></i>
+        <h4>Your cart is empty</h4>
+        <p class="text-muted">Start shopping to add items to your cart</p>
+        <a href="{% url 'product_catalog' %}" class="btn btn-primary">
+            <i class="fas fa-shopping-bag"></i> Browse Products
+        </a>
+    </div>
+</div>
+{% endif %}
+{% endblock %}
+

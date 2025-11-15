@@ -1,0 +1,56 @@
+{% extends 'crm/base.html' %}
+
+{% block title %}{{ action }} Workflow - Retail CRM{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pb-2 mb-3 border-bottom" style="border-color: rgba(255,255,255,0.08) !important;">
+    <h1 class="h2" style="color: #e8e4f0;"><i class="fas fa-cogs"></i> {{ action }} Workflow</h1>
+    <a href="{% url 'workflow_list' %}" class="btn btn-outline-primary">Back to List</a>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        <form method="post">
+            {% csrf_token %}
+            <div class="mb-3">
+                <label class="form-label">Name *</label>
+                {{ form.name }}
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Description</label>
+                {{ form.description }}
+            </div>
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">Trigger Type *</label>
+                    {{ form.trigger_type }}
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">Action Type *</label>
+                    {{ form.action_type }}
+                </div>
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Trigger Conditions (JSON)</label>
+                {{ form.trigger_conditions }}
+                <small class="form-text text-muted">Example: {"status": "active", "total_spent__gte": 1000}</small>
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Action Config (JSON)</label>
+                {{ form.action_config }}
+                <small class="form-text text-muted">Example: {"points": 100, "description": "Welcome bonus"}</small>
+            </div>
+            <div class="mb-3 form-check">
+                {{ form.is_active }}
+                <label class="form-check-label" for="{{ form.is_active.id_for_label }}">
+                    Active
+                </label>
+            </div>
+            <button type="submit" class="btn btn-primary">
+                <i class="fas fa-save"></i> Save Workflow
+            </button>
+        </form>
+    </div>
+</div>
+{% endblock %}
+

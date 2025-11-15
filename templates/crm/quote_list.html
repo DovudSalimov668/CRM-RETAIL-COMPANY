@@ -1,0 +1,88 @@
+{% extends 'crm/base.html' %}
+
+{% block title %}Quotes - Retail CRM{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pb-2 mb-3 border-bottom">
+    <h1 class="h2"><i class="fas fa-file-invoice-dollar"></i> Quotes</h1>
+    <a href="{% url 'quote_create' %}" class="btn btn-primary"><i class="fas fa-plus"></i> Add Quote</a>
+</div>
+
+<div class="card mb-4">
+    <div class="card-body">
+        <form method="get" class="row g-3">
+            <div class="col-md-4"><input type="text" name="q" class="form-control" placeholder="Search..." value="{{ query }}"></div>
+            <div class="col-md-3">
+                <select name="status" class="form-control">
+                    <option value="">All Status</option>
+                    <option value="draft" {% if status_filter == 'draft' %}selected{% endif %}>Draft</option>
+                    <option value="sent" {% if status_filter == 'sent' %}selected{% endif %}>Sent</option>
+                    <option value="accepted" {% if status_filter == 'accepted' %}selected{% endif %}>Accepted</option>
+                    <option value="rejected" {% if status_filter == 'rejected' %}selected{% endif %}>Rejected</option>
+                    <option value="expired" {% if status_filter == 'expired' %}selected{% endif %}>Expired</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" name="expired" id="expired" {% if expired %}checked{% endif %}>
+                    <label class="form-check-label" for="expired">Show Expired</label>
+                </div>
+            </div>
+            <div class="col-md-3"><button type="submit" class="btn btn-primary"><i class="fas fa-search"></i> Search</button></div>
+        </form>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header"><h5 class="mb-0">Quote List</h5></div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>Quote #</th>
+                        <th>Customer</th>
+                        <th>Deal</th>
+                        <th>Amount</th>
+                        <th>Status</th>
+                        <th>Valid Until</th>
+                        <th>Created</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for quote in quotes %}
+                    <tr>
+                        <td><strong><a href="{% url 'quote_detail' quote.pk %}">{{ quote.quote_number }}</a></strong></td>
+                        <td><a href="{% url 'customer_detail' quote.customer.pk %}">{{ quote.customer.first_name }} {{ quote.customer.last_name }}</a></td>
+                        <td>{% if quote.deal %}<a href="{% url 'deal_detail' quote.deal.pk %}">{{ quote.deal.title }}</a>{% else %}-{% endif %}</td>
+                        <td>${{ quote.total_amount|floatformat:2 }}</td>
+                        <td>
+                            <span class="badge bg-{% if quote.status == 'accepted' %}success{% elif quote.status == 'rejected' %}danger{% elif quote.status == 'expired' or quote.is_expired %}warning{% else %}info{% endif %}">
+                                {{ quote.get_status_display }}{% if quote.is_expired %} (Expired){% endif %}
+                            </span>
+                        </td>
+                        <td>{{ quote.valid_until|date:"M d, Y" }}</td>
+                        <td>{{ quote.created_at|date:"M d, Y" }}</td>
+                        <td>
+                            <a href="{% url 'quote_detail' quote.pk %}" class="btn btn-sm btn-primary"><i class="fas fa-eye"></i></a>
+                            <a href="{% url 'quote_update' quote.pk %}" class="btn btn-sm btn-secondary"><i class="fas fa-edit"></i></a>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="8" class="text-center text-muted">No quotes found</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% if quotes.has_other_pages %}
+        <nav><ul class="pagination justify-content-center">
+            {% if quotes.has_previous %}<li class="page-item"><a class="page-link" href="?page={{ quotes.previous_page_number }}">Previous</a></li>{% endif %}
+            <li class="page-item active"><span class="page-link">Page {{ quotes.number }} of {{ quotes.paginator.num_pages }}</span></li>
+            {% if quotes.has_next %}<li class="page-item"><a class="page-link" href="?page={{ quotes.next_page_number }}">Next</a></li>{% endif %}
+        </ul></nav>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+

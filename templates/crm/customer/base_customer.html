@@ -1,0 +1,434 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Retail CRM - Customer Portal{% endblock %}</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            background: #f8f9fa;
+            color: #1a1a1a;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+        
+        /* Navigation Bar */
+        .customer-navbar {
+            background: #ffffff;
+            border-bottom: 2px solid #5a1a8b;
+            padding: 14px 0;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            box-shadow: 0 2px 10px rgba(90, 26, 139, 0.1);
+        }
+        
+        .customer-navbar .navbar-brand {
+            color: #5a1a8b;
+            font-weight: 600;
+            font-size: 20px;
+            text-decoration: none;
+        }
+        
+        .customer-navbar .navbar-brand:hover {
+            color: #47136d;
+        }
+        
+        .customer-navbar .nav-link {
+            color: #666666;
+            font-weight: 500;
+            padding: 8px 16px;
+            border-radius: 6px;
+            transition: all 0.2s;
+            margin: 0 4px;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .customer-navbar .nav-link:hover {
+            background: rgba(90, 26, 139, 0.1);
+            color: #5a1a8b;
+        }
+        
+        .customer-navbar .nav-link.active {
+            background: rgba(90,26,139,0.15);
+            color: #5a1a8b;
+        }
+        
+        .customer-navbar .badge {
+            background: #ff6b6b;
+            color: #fff;
+            font-size: 11px;
+            padding: 3px 6px;
+            border-radius: 10px;
+            margin-left: 4px;
+        }
+        
+        .customer-navbar .navbar-toggler {
+            border-color: rgba(255,255,255,0.2);
+        }
+        
+        .customer-navbar .navbar-toggler-icon {
+            background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 30'%3e%3cpath stroke='rgba%28255, 255, 255, 0.85%29' stroke-linecap='round' stroke-miterlimit='10' stroke-width='2' d='M4 7h22M4 15h22M4 23h22'/%3e%3c/svg%3e");
+        }
+        
+        /* Main Content */
+        .main-content {
+            padding: 32px 0;
+            min-height: calc(100vh - 70px);
+        }
+        
+        /* Cards */
+        .card {
+            background: #ffffff;
+            border: 2px solid rgba(90, 26, 139, 0.2);
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(90, 26, 139, 0.1);
+            color: #1a1a1a;
+            margin-bottom: 24px;
+        }
+        
+        .card-header {
+            background: linear-gradient(135deg, #5a1a8b 0%, #47136d 100%);
+            color: #fff !important;
+            border-radius: 12px 12px 0 0;
+            padding: 16px 20px;
+            font-weight: 600;
+            border: none;
+        }
+        
+        .card-header * {
+            color: #fff !important;
+        }
+        
+        .card-header h5,
+        .card-header h6,
+        .card-header p,
+        .card-header span,
+        .card-header i {
+            color: #fff !important;
+        }
+        
+        .card-body {
+            padding: 20px;
+        }
+        
+        /* Stat Cards */
+        .stat-card {
+            background: linear-gradient(135deg, #5a1a8b 0%, #2a0d3a 100%);
+            color: #fff !important;
+            padding: 24px;
+            border-radius: 12px;
+            border: 1px solid rgba(255,255,255,0.1);
+            box-shadow: 0 4px 16px rgba(90,26,139,0.2);
+            text-align: center;
+        }
+        
+        .stat-card * {
+            color: #fff !important;
+        }
+        
+        .stat-card h3 {
+            font-size: 2.2rem;
+            font-weight: 700;
+            margin: 8px 0;
+            color: #fff !important;
+        }
+        
+        .stat-card h6 {
+            color: rgba(255,255,255,0.95) !important;
+            font-weight: 500;
+            margin-bottom: 8px;
+        }
+        
+        .stat-card i,
+        .stat-card small,
+        .stat-card span {
+            color: #fff !important;
+        }
+        
+        /* Ensure white text on any gradient/dark backgrounds */
+        [style*="gradient"],
+        [style*="background: linear-gradient"],
+        [style*="background:radial-gradient"] {
+            color: #fff !important;
+        }
+        
+        [style*="gradient"] *,
+        [style*="background: linear-gradient"] *,
+        [style*="background:radial-gradient"] * {
+            color: #fff !important;
+        }
+        
+        [style*="gradient"] h3,
+        [style*="gradient"] h6,
+        [style*="gradient"] small,
+        [style*="gradient"] i {
+            color: #fff !important;
+        }
+        
+        /* Ensure badges on dark backgrounds have white text */
+        .stat-card .badge,
+        .card-header .badge,
+        [style*="gradient"] .badge,
+        .stat-card .badge.bg-success,
+        .stat-card .badge.bg-info,
+        .stat-card .badge.bg-primary,
+        .stat-card .badge.bg-danger,
+        .stat-card .badge.bg-secondary {
+            color: #fff !important;
+        }
+        
+        /* Force white text on all badges inside stat cards and card headers */
+        .stat-card .badge *,
+        .card-header .badge * {
+            color: #fff !important;
+        }
+        
+        /* Bootstrap badge colors - ensure white text on colored backgrounds */
+        .bg-primary,
+        .bg-success,
+        .bg-info,
+        .bg-danger,
+        .bg-secondary,
+        .bg-warning:not(.text-dark) {
+            color: #fff !important;
+        }
+        
+        .bg-primary *,
+        .bg-success *,
+        .bg-info *,
+        .bg-danger *,
+        .bg-secondary * {
+            color: #fff !important;
+        }
+        
+        /* Ensure badges with custom dark backgrounds have white text */
+        .badge[style*="background"]:not([style*="text-dark"]) {
+            color: #fff !important;
+        }
+        
+        /* Tables */
+        .table {
+            color: #1a1a1a;
+            background: transparent;
+        }
+        
+        .table thead {
+            background: #e8d5ff;
+            color: #5a1a8b;
+            font-weight: 600;
+        }
+        
+        .table tbody tr {
+            border-color: rgba(90, 26, 139, 0.2);
+        }
+        
+        .table tbody tr:hover {
+            background: rgba(90, 26, 139, 0.1);
+        }
+        
+        /* Forms */
+        .form-control, .form-select {
+            background: #ffffff;
+            border: 2px solid rgba(90, 26, 139, 0.2);
+            color: #1a1a1a;
+            border-radius: 8px;
+            padding: 10px 14px;
+        }
+        
+        .form-control:focus, .form-select:focus {
+            background: #ffffff;
+            border-color: #5a1a8b;
+            box-shadow: 0 0 0 0.2rem rgba(90,26,139,0.2);
+            color: #1a1a1a;
+        }
+        
+        .form-control::placeholder {
+            color: #666666 !important;
+        }
+        
+        label {
+            color: #1a1a1a;
+            font-weight: 500;
+            margin-bottom: 6px;
+        }
+        
+        /* Buttons */
+        .btn-primary {
+            background: linear-gradient(135deg, #5a1a8b 0%, #47136d 100%);
+            border: none;
+            border-radius: 8px;
+            padding: 10px 20px;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+        
+        .btn-primary:hover {
+            background: linear-gradient(135deg, #47136d 0%, #3a0f5a 100%);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(90,26,139,0.3);
+        }
+        
+        .btn-outline-primary {
+            border-color: #5a1a8b;
+            color: #d7b8ff;
+        }
+        
+        .btn-outline-primary:hover {
+            background: #5a1a8b;
+            border-color: #5a1a8b;
+            color: #fff;
+        }
+        
+        /* Alerts */
+        .alert {
+            border: 1px solid rgba(255,255,255,0.12);
+            border-radius: 8px;
+            background: rgba(21, 16, 32, 0.8);
+        }
+        
+        .btn-close {
+            filter: invert(1);
+        }
+        
+        /* Badges */
+        .badge {
+            padding: 6px 10px;
+            font-weight: 500;
+            border-radius: 6px;
+        }
+        
+        /* Product Cards */
+        .product-card {
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        
+        .product-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+        }
+        
+        /* Text Colors */
+        .text-muted {
+            color: #666666 !important;
+        }
+        
+        h1, h2, h3, h4, h5, h6 {
+            color: #1a1a1a !important;
+        }
+        
+        .card-title, .card-text {
+            color: #1a1a1a !important;
+        }
+        
+        .border-bottom {
+            border-color: rgba(90, 26, 139, 0.2) !important;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg customer-navbar">
+        <div class="container">
+            <a class="navbar-brand" href="{% if user.is_authenticated %}{% url 'customer_portal' %}{% else %}{% url 'home' %}{% endif %}">
+                <i class="fas fa-store"></i> Retail CRM
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#customerNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="customerNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'home' %}">
+                            <i class="fas fa-home"></i> Home
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'docs' %}">
+                            <i class="fas fa-book"></i> Docs
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {% if 'product_catalog' in request.resolver_match.url_name or 'product_detail' in request.resolver_match.url_name %}active{% endif %}" href="{% url 'product_catalog' %}">
+                            <i class="fas fa-shopping-bag"></i> Shop
+                        </a>
+                    </li>
+                    {% if user.is_authenticated %}
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle d-flex align-items-center" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                              {% if customer.profile_image %}
+                                <img src="{{ customer.profile_image.url }}" alt="Profile Photo" style="width:32px;height:32px;border-radius:50%;object-fit:cover;margin-right:7px;background:#111;">
+                              {% else %}
+                                <img src="https://ui-avatars.com/api/?name={{ customer.first_name }}+{{ customer.last_name }}&background=5a1a8b&color=fff&size=32" alt="Avatar" style="width:32px;height:32px;border-radius:50%;object-fit:cover;margin-right:7px;background:#111;">
+                              {% endif %}
+                              <span>{{ customer.get_full_name }}</span>
+                            </a>
+                            <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
+                              {% if user.is_authenticated %}
+                                <li><a class="dropdown-item" href="/profile/edit/">My Profile</a></li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li><a class="dropdown-item text-danger" href="/logout/">Logout</a></li>
+                              {% else %}
+                                <li><a class="dropdown-item" href="/login/">Login</a></li>
+                              {% endif %}
+                            </ul>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link {% if 'customer_order' in request.resolver_match.url_name %}active{% endif %}" href="{% url 'customer_order_history' %}">
+                                <i class="fas fa-list"></i> My Orders
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link {% if 'view_cart' in request.resolver_match.url_name or 'checkout' in request.resolver_match.url_name %}active{% endif %}" href="{% url 'view_cart' %}">
+                                <i class="fas fa-shopping-cart"></i> Cart
+                                {% if request.session.cart %}
+                                    <span class="badge">{{ request.session.cart|length }}</span>
+                                {% endif %}
+                            </a>
+                        </li>
+                    {% else %}
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'customer_login' %}">
+                                <i class="fas fa-sign-in-alt"></i> Login
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'customer_register' %}">
+                                <i class="fas fa-user-plus"></i> Register
+                            </a>
+                        </li>
+                    {% endif %}
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="main-content">
+        <div class="container">
+        {% if messages %}
+            {% for message in messages %}
+                <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            {% endfor %}
+        {% endif %}
+
+        {% block content %}{% endblock %}
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

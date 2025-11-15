@@ -1,0 +1,132 @@
+{% extends 'crm/base.html' %}
+
+{% block title %}{{ action }} Product - Retail CRM{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pb-2 mb-3 border-bottom">
+    <h1 class="h2"><i class="fas fa-box"></i> {{ action }} Product</h1>
+    <a href="{% url 'product_list' %}" class="btn btn-secondary">Back to List</a>
+</div>
+
+<div class="card">
+    <div class="card-header">
+        <h5 class="mb-0">Product Information</h5>
+    </div>
+    <div class="card-body">
+        <form method="post" enctype="multipart/form-data">
+            {% csrf_token %}
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">Name *</label>
+                    {{ form.name }}
+                    {% if form.name.errors %}
+                        <div class="text-danger">{{ form.name.errors }}</div>
+                    {% endif %}
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">SKU *</label>
+                    {{ form.sku }}
+                    {% if form.sku.errors %}
+                        <div class="text-danger">{{ form.sku.errors }}</div>
+                    {% endif %}
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">Category *</label>
+                    {{ form.category }}
+                    {% if form.category.errors %}
+                        <div class="text-danger">{{ form.category.errors }}</div>
+                    {% endif %}
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">Price *</label>
+                    {{ form.price }}
+                    {% if form.price.errors %}
+                        <div class="text-danger">{{ form.price.errors }}</div>
+                    {% endif %}
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">Cost</label>
+                    {{ form.cost }}
+                    {% if form.cost.errors %}
+                        <div class="text-danger">{{ form.cost.errors }}</div>
+                    {% endif %}
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">Stock Quantity *</label>
+                    {{ form.stock_quantity }}
+                    {% if form.stock_quantity.errors %}
+                        <div class="text-danger">{{ form.stock_quantity.errors }}</div>
+                    {% endif %}
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">Min Stock Level</label>
+                    {{ form.min_stock_level }}
+                    {% if form.min_stock_level.errors %}
+                        <div class="text-danger">{{ form.min_stock_level.errors }}</div>
+                    {% endif %}
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">Image URL</label>
+                    {{ form.image_url }}
+                    {% if form.image_url.errors %}
+                        <div class="text-danger">{{ form.image_url.errors }}</div>
+                    {% endif %}
+                </div>
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Description</label>
+                {{ form.description }}
+                {% if form.description.errors %}
+                    <div class="text-danger">{{ form.description.errors }}</div>
+                {% endif %}
+            </div>
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">Image Upload</label>
+                    {% if form.instance.image %}
+                        <div class="mb-2">
+                            <img src="{{ form.instance.image.url }}" alt="Product Image" class="img-thumbnail" style="height:128px;width:128px;object-fit:cover;border-radius:12px;background:#111;">
+                        </div>
+                    {% else %}
+                        <div class="mb-2 d-flex align-items-center justify-content-center" style="height:128px;width:128px;background:#111;border-radius:12px;">
+                            <i class="fas fa-box fa-3x text-muted"></i>
+                        </div>
+                    {% endif %}
+                    {{ form.image }}
+                    {% if form.image.errors %}
+                        <div class="text-danger">{{ form.image.errors }}</div>
+                    {% endif %}
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">Image URL (optional)</label>
+                    {{ form.image_url }}
+                    {% if form.image_url.errors %}
+                        <div class="text-danger">{{ form.image_url.errors }}</div>
+                    {% endif %}
+                </div>
+            </div>
+            <div class="mb-3">
+                <div class="form-check">
+                    {{ form.is_active }}
+                    <label class="form-check-label" for="{{ form.is_active.id_for_label }}">
+                        Active
+                    </label>
+                </div>
+            </div>
+            <div class="mt-4">
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-save"></i> Save
+                </button>
+                <a href="{% url 'product_list' %}" class="btn btn-secondary">Cancel</a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+

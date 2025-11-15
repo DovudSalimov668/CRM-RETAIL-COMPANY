@@ -1,0 +1,133 @@
+{% extends 'crm/base.html' %}
+
+{% block title %}Products - Retail CRM{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pb-2 mb-3 border-bottom">
+    <h1 class="h2"><i class="fas fa-box"></i> Products</h1>
+    <div class="btn-toolbar mb-2 mb-md-0">
+        <a href="{% url 'product_create' %}" class="btn btn-primary">
+            <i class="fas fa-plus"></i> Add Product
+        </a>
+    </div>
+</div>
+
+<!-- Search and Filters -->
+<div class="card mb-4">
+    <div class="card-body">
+        <form method="get" class="row g-3">
+            <div class="col-md-4">
+                <input type="text" name="q" class="form-control" placeholder="Search products..." value="{{ query }}">
+            </div>
+            <div class="col-md-3">
+                <select name="category" class="form-control">
+                    <option value="">All Categories</option>
+                    <option value="electronics" {% if category_filter == 'electronics' %}selected{% endif %}>Electronics</option>
+                    <option value="clothing" {% if category_filter == 'clothing' %}selected{% endif %}>Clothing</option>
+                    <option value="food" {% if category_filter == 'food' %}selected{% endif %}>Food & Beverage</option>
+                    <option value="books" {% if category_filter == 'books' %}selected{% endif %}>Books</option>
+                    <option value="home" {% if category_filter == 'home' %}selected{% endif %}>Home & Garden</option>
+                    <option value="sports" {% if category_filter == 'sports' %}selected{% endif %}>Sports</option>
+                    <option value="other" {% if category_filter == 'other' %}selected{% endif %}>Other</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" name="low_stock" id="low_stock" {% if low_stock %}checked{% endif %}>
+                    <label class="form-check-label" for="low_stock">Low Stock</label>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <button type="submit" class="btn btn-primary"><i class="fas fa-search"></i> Search</button>
+                <a href="{% url 'product_list' %}" class="btn btn-secondary"><i class="fas fa-times"></i> Clear</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Products Table -->
+<div class="card">
+    <div class="card-header">
+        <h5 class="mb-0">Product List</h5>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th></th>
+                        <th>Name</th>
+                        <th>SKU</th>
+                        <th>Category</th>
+                        <th>Price</th>
+                        <th>Stock</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for product in products %}
+                    <tr>
+                        <td>
+                            {% if product.image %}
+                                <img src="{{ product.image.url }}" alt="{{ product.name }}" style="height:40px;width:40px;object-fit:cover;border-radius:50%;background:#222;margin-right:8px;">
+                            {% else %}
+                                <img src="https://ui-avatars.com/api/?name={{ product.name|urlencode }}&background=5a1a8b&color=fff&size=40" alt="{{ product.name }}" style="height:40px;width:40px;object-fit:cover;border-radius:50%;background:#222;margin-right:8px;">
+                            {% endif %}
+                        </td>
+                        <td><strong>{{ product.name }}</strong></td>
+                        <td>{{ product.sku }}</td>
+                        <td>{{ product.get_category_display }}</td>
+                        <td>${{ product.price|floatformat:2 }}</td>
+                        <td>
+                            {% if product.is_low_stock %}
+                                <span class="badge bg-warning">{{ product.stock_quantity }} (Low)</span>
+                            {% else %}
+                                {{ product.stock_quantity }}
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if product.is_active %}
+                                <span class="badge bg-success">Active</span>
+                            {% else %}
+                                <span class="badge bg-secondary">Inactive</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <a href="{% url 'product_update' product.pk %}" class="btn btn-sm btn-primary">
+                                <i class="fas fa-edit"></i>
+                            </a>
+                            <a href="{% url 'product_delete' product.pk %}" class="btn btn-sm btn-danger">
+                                <i class="fas fa-trash"></i>
+                            </a>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="8" class="text-center text-muted">No products found</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        
+        <!-- Pagination -->
+        {% if products.has_other_pages %}
+        <nav aria-label="Page navigation">
+            <ul class="pagination justify-content-center">
+                {% if products.has_previous %}
+                    <li class="page-item"><a class="page-link" href="?page=1{% if query %}&q={{ query }}{% endif %}{% if category_filter %}&category={{ category_filter }}{% endif %}">First</a></li>
+                    <li class="page-item"><a class="page-link" href="?page={{ products.previous_page_number }}{% if query %}&q={{ query }}{% endif %}{% if category_filter %}&category={{ category_filter }}{% endif %}">Previous</a></li>
+                {% endif %}
+                <li class="page-item active"><span class="page-link">Page {{ products.number }} of {{ products.paginator.num_pages }}</span></li>
+                {% if products.has_next %}
+                    <li class="page-item"><a class="page-link" href="?page={{ products.next_page_number }}{% if query %}&q={{ query }}{% endif %}{% if category_filter %}&category={{ category_filter }}{% endif %}">Next</a></li>
+                    <li class="page-item"><a class="page-link" href="?page={{ products.paginator.num_pages }}{% if query %}&q={{ query }}{% endif %}{% if category_filter %}&category={{ category_filter }}{% endif %}">Last</a></li>
+                {% endif %}
+            </ul>
+        </nav>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+

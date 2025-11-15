@@ -1,0 +1,75 @@
+{% extends 'crm/base.html' %}
+
+{% block title %}Order Detail - Retail CRM{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pb-2 mb-3 border-bottom">
+    <h1 class="h2"><i class="fas fa-shopping-cart"></i> Order {{ order.order_number }}</h1>
+    <div>
+        <a href="{% url 'order_update' order.pk %}" class="btn btn-primary"><i class="fas fa-edit"></i> Edit</a>
+        <a href="{% url 'order_list' %}" class="btn btn-secondary">Back to List</a>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-8">
+        <div class="card mb-4">
+            <div class="card-header"><h5 class="mb-0">Order Information</h5></div>
+            <div class="card-body">
+                <table class="table">
+                    <tr><th>Order Number:</th><td><strong>{{ order.order_number }}</strong></td></tr>
+                    <tr><th>Customer:</th><td><a href="{% url 'customer_detail' order.customer.pk %}">{{ order.customer.first_name }} {{ order.customer.last_name }}</a></td></tr>
+                    <tr><th>Status:</th><td><span class="badge bg-{% if order.status == 'delivered' %}success{% elif order.status == 'processing' %}info{% elif order.status == 'pending' %}warning{% else %}secondary{% endif %}">{{ order.get_status_display }}</span></td></tr>
+                    <tr><th>Payment Status:</th><td><span class="badge bg-{% if order.payment_status == 'paid' %}success{% elif order.payment_status == 'partial' %}warning{% else %}danger{% endif %}">{{ order.get_payment_status_display }}</span></td></tr>
+                    <tr><th>Subtotal:</th><td>${{ order.subtotal|floatformat:2 }}</td></tr>
+                    <tr><th>Tax:</th><td>${{ order.tax|floatformat:2 }}</td></tr>
+                    <tr><th>Discount:</th><td>${{ order.discount|floatformat:2 }}</td></tr>
+                    <tr><th>Shipping Cost:</th><td>${{ order.shipping_cost|floatformat:2 }}</td></tr>
+                    <tr><th>Total Amount:</th><td><strong>${{ order.total_amount|floatformat:2 }}</strong></td></tr>
+                    {% if order.shipping_address %}<tr><th>Shipping Address:</th><td>{{ order.shipping_address }}</td></tr>{% endif %}
+                    {% if order.tracking_number %}<tr><th>Tracking Number:</th><td>{{ order.tracking_number }}</td></tr>{% endif %}
+                    {% if order.shipped_date %}<tr><th>Shipped Date:</th><td>{{ order.shipped_date|date:"M d, Y" }}</td></tr>{% endif %}
+                    {% if order.delivered_date %}<tr><th>Delivered Date:</th><td>{{ order.delivered_date|date:"M d, Y" }}</td></tr>{% endif %}
+                    {% if order.notes %}<tr><th>Notes:</th><td>{{ order.notes }}</td></tr>{% endif %}
+                    <tr><th>Created:</th><td>{{ order.created_at|date:"M d, Y H:i" }}</td></tr>
+                </table>
+            </div>
+        </div>
+        
+        <div class="card">
+            <div class="card-header"><h5 class="mb-0">Order Items</h5></div>
+            <div class="card-body">
+                {% if order_items %}
+                <div class="table-responsive">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Product</th>
+                                <th>Quantity</th>
+                                <th>Unit Price</th>
+                                <th>Discount</th>
+                                <th>Subtotal</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in order_items %}
+                            <tr>
+                                <td>{{ item.product.name }}</td>
+                                <td>{{ item.quantity }}</td>
+                                <td>${{ item.unit_price|floatformat:2 }}</td>
+                                <td>${{ item.discount|floatformat:2 }}</td>
+                                <td>${{ item.subtotal|floatformat:2 }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <p class="text-muted">No items in this order</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+

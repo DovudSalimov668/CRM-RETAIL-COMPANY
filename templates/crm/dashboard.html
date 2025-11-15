@@ -1,0 +1,354 @@
+{% extends 'crm/base.html' %}
+{% load static %}
+
+{% block title %}Dashboard - Retail CRM{% endblock %}
+
+{% block content %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
+
+<div class="d-flex align-items-center mb-3">
+  <div style="margin-right:18px;">
+    {% if request.user.customer_profile.profile_image %}
+      <img src="{{ request.user.customer_profile.profile_image.url }}" alt="Profile Photo" style="height:56px;width:56px;object-fit:cover;border-radius:50%;border:3px solid #5a1a8b;background:#fff;">
+    {% else %}
+      <img src="https://ui-avatars.com/api/?name={{ request.user.get_full_name|urlencode }}&background=5a1a8b&color=fff&size=56" alt="Avatar" style="height:56px;width:56px;object-fit:cover;border-radius:50%;border:3px solid #5a1a8b;background:#fff;">
+    {% endif %}
+  </div>
+  <div>
+    <h4 class="mb-1">Welcome, {{ request.user.get_full_name|default:request.user.username }}</h4>
+    <div class="text-muted">Role: <b>{% if request.user.is_staff %}Staff/Admin{% else %}Customer{% endif %}</b></div>
+  </div>
+</div>
+
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pb-2 mb-3 border-bottom">
+    <h1 class="h2"><i class="fas fa-chart-line"></i> Dashboard</h1>
+    <div class="btn-toolbar mb-2 mb-md-0">
+        <a href="{% url 'reports' %}" class="btn btn-sm btn-outline-primary">
+            <i class="fas fa-chart-bar"></i> View Reports
+        </a>
+    </div>
+</div>
+
+<!-- Statistics Cards -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="stat-card">
+            <i class="fas fa-users fa-2x mb-2"></i>
+            <h6>Total Customers</h6>
+            <h3>{{ total_customers }}</h3>
+            <small>Active: {{ active_customers }} | VIP: {{ vip_customers }}</small>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stat-card" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); color: #fff;">
+            <i class="fas fa-shopping-cart fa-2x mb-2" style="color: #fff;"></i>
+            <h6 style="color: rgba(255,255,255,0.95);">Total Orders</h6>
+            <h3 style="color: #fff;">{{ total_orders }}</h3>
+            <small style="color: rgba(255,255,255,0.85);">Pending: {{ pending_orders }} | Processing: {{ processing_orders }}</small>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stat-card" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); color: #fff;">
+            <i class="fas fa-dollar-sign fa-2x mb-2" style="color: #fff;"></i>
+            <h6 style="color: rgba(255,255,255,0.95);">Total Revenue</h6>
+            <h3 style="color: #fff;">${{ total_revenue|floatformat:2 }}</h3>
+            <small style="color: rgba(255,255,255,0.85);">This Month: ${{ this_month_revenue|floatformat:2 }}</small>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stat-card" style="background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%); color: #fff;">
+            <i class="fas fa-handshake fa-2x mb-2" style="color: #fff;"></i>
+            <h6 style="color: rgba(255,255,255,0.95);">Deals Pipeline</h6>
+            <h3 style="color: #fff;">{{ open_deals }}</h3>
+            <small style="color: rgba(255,255,255,0.85);">Value: ${{ total_deal_value|floatformat:2 }}</small>
+        </div>
+    </div>
+</div>
+
+<!-- Charts Row -->
+<div class="row mb-4">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-chart-line"></i> Monthly Revenue</h5>
+            </div>
+            <div class="card-body">
+                <canvas id="revenueChart" height="80"></canvas>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-chart-pie"></i> Customer Status</h5>
+            </div>
+            <div class="card-body">
+                <canvas id="customerStatusChart"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Recent Activity -->
+<div class="row">
+    <!-- Recent Customers -->
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-user-plus"></i> Recent Customers</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover table-sm">
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Email</th>
+                                <th>Status</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for customer in recent_customers %}
+                            <tr>
+                                <td>
+                                    {% if customer.profile_image %}
+                                        <img src="{{ customer.profile_image.url }}" alt="Profile" style="height:32px;width:32px;object-fit:cover;border-radius:50%;background:#222;">
+                                    {% else %}
+                                        <img src="https://ui-avatars.com/api/?name={{ customer.first_name }}+{{ customer.last_name }}&background=5a1a8b&color=fff&size=32" alt="Profile" style="height:32px;width:32px;object-fit:cover;border-radius:50%;background:#222;">
+                                    {% endif %}
+                                </td>
+                                <td>{{ customer.first_name }} {{ customer.last_name }}</td>
+                                <td>{{ customer.email }}</td>
+                                <td>
+                                    {% if customer.status == 'active' %}
+                                        <span class="badge bg-success">Active</span>
+                                    {% elif customer.status == 'vip' %}
+                                        <span class="badge bg-warning">VIP</span>
+                                    {% elif customer.status == 'lead' %}
+                                        <span class="badge bg-info">Lead</span>
+                                    {% else %}
+                                        <span class="badge bg-secondary">{{ customer.get_status_display }}</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <a href="{% url 'customer_detail' customer.pk %}" class="btn btn-sm btn-primary">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="4" class="text-center text-muted">No customers yet</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                <div class="text-center mt-3">
+                    <a href="{% url 'customer_list' %}" class="btn btn-outline-primary btn-sm">View All Customers</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Orders -->
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-shopping-bag"></i> Recent Orders</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover table-sm">
+                        <thead>
+                            <tr>
+                                <th>Order #</th>
+                                <th>Customer</th>
+                                <th>Amount</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for order in recent_orders %}
+                            <tr>
+                                <td><a href="{% url 'order_detail' order.pk %}">{{ order.order_number }}</a></td>
+                                <td>
+                                    {% if order.customer %}
+                                        {{ order.customer.first_name }} {{ order.customer.last_name }}
+                                    {% else %}
+                                        <span class="text-muted">No Customer</span>
+                                    {% endif %}
+                                </td>
+                                <td>${{ order.total_amount|floatformat:2 }}</td>
+                                <td>
+                                    {% if order.status == 'delivered' %}
+                                        <span class="badge bg-success">Delivered</span>
+                                    {% elif order.status == 'processing' %}
+                                        <span class="badge bg-info">Processing</span>
+                                    {% elif order.status == 'pending' %}
+                                        <span class="badge bg-warning">Pending</span>
+                                    {% else %}
+                                        <span class="badge bg-secondary">{{ order.get_status_display }}</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="4" class="text-center text-muted">No orders yet</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                <div class="text-center mt-3">
+                    <a href="{% url 'order_list' %}" class="btn btn-outline-primary btn-sm">View All Orders</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Upcoming Tasks and Recent Deals -->
+<div class="row mt-4">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-tasks"></i> Upcoming Tasks</h5>
+            </div>
+            <div class="card-body">
+                {% if upcoming_tasks %}
+                <div class="list-group">
+                    {% for task in upcoming_tasks %}
+                    <div class="list-group-item">
+                        <div class="d-flex w-100 justify-content-between">
+                            <h6 class="mb-1">{{ task.title }}</h6>
+                            <small>{{ task.due_date|date:"M d" }}</small>
+                        </div>
+                        <p class="mb-1">{{ task.description|truncatewords:10 }}</p>
+                        <small>
+                            <span class="badge bg-{% if task.priority == 'urgent' %}danger{% elif task.priority == 'high' %}warning{% else %}info{% endif %}">
+                                {{ task.get_priority_display }}
+                            </span>
+                            {% if task.customer %}
+                                - {{ task.customer.first_name }} {{ task.customer.last_name }}
+                            {% endif %}
+                        </small>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <p class="text-muted text-center">No upcoming tasks</p>
+                {% endif %}
+                <div class="text-center mt-3">
+                    <a href="{% url 'task_list' %}" class="btn btn-outline-primary btn-sm">View All Tasks</a>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-handshake"></i> Recent Deals</h5>
+            </div>
+            <div class="card-body">
+                {% if recent_deals %}
+                <div class="table-responsive">
+                    <table class="table table-hover table-sm">
+                        <thead>
+                            <tr>
+                                <th>Deal</th>
+                                <th>Customer</th>
+                                <th>Amount</th>
+                                <th>Stage</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for deal in recent_deals %}
+                            <tr>
+                                <td><a href="{% url 'deal_detail' deal.pk %}">{{ deal.title }}</a></td>
+                                <td>{{ deal.customer.first_name }} {{ deal.customer.last_name }}</td>
+                                <td>${{ deal.amount|floatformat:2 }}</td>
+                                <td>
+                                    <span class="badge bg-{% if deal.stage == 'closed_won' %}success{% elif deal.stage == 'closed_lost' %}danger{% else %}info{% endif %}">
+                                        {{ deal.get_stage_display }}
+                                    </span>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <p class="text-muted text-center">No deals yet</p>
+                {% endif %}
+                <div class="text-center mt-3">
+                    <a href="{% url 'deal_list' %}" class="btn btn-outline-primary btn-sm">View All Deals</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Revenue Chart
+    const revenueData = {{ monthly_revenue|safe }};
+    const ctx1 = document.getElementById('revenueChart').getContext('2d');
+    new Chart(ctx1, {
+        type: 'line',
+        data: {
+            labels: revenueData.map(item => item.month),
+            datasets: [{
+                label: 'Revenue ($)',
+                data: revenueData.map(item => item.revenue),
+                borderColor: 'rgb(69, 16, 121)',
+                backgroundColor: 'rgba(69, 16, 121, 0.1)',
+                tension: 0.4
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: true,
+            plugins: {
+                legend: {
+                    display: false
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true
+                }
+            }
+        }
+    });
+
+    // Customer Status Chart
+    const customerStatusData = {{ customer_status_data|safe }};
+    const ctx2 = document.getElementById('customerStatusChart').getContext('2d');
+    new Chart(ctx2, {
+        type: 'doughnut',
+        data: {
+            labels: customerStatusData.map(item => item.status),
+            datasets: [{
+                data: customerStatusData.map(item => item.count),
+                backgroundColor: [
+                    'rgba(75, 192, 192, 0.8)',
+                    'rgba(255, 99, 132, 0.8)',
+                    'rgba(255, 206, 86, 0.8)',
+                    'rgba(54, 162, 235, 0.8)',
+                    'rgba(153, 102, 255, 0.8)'
+                ]
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: true,
+            plugins: {
+                legend: {
+                    position: 'bottom'
+                }
+            }
+        }
+    });
+</script>
+{% endblock %}

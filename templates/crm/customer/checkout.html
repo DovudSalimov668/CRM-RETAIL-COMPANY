@@ -1,0 +1,130 @@
+{% extends 'crm/customer/base_customer.html' %}
+
+{% block title %}Checkout{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pb-2 mb-3 border-bottom" style="border-color: rgba(255,255,255,0.08) !important;">
+    <h1 class="h2" style="color: #e8e4f0;"><i class="fas fa-credit-card"></i> Checkout</h1>
+    <a href="{% url 'view_cart' %}" class="btn btn-outline-secondary">
+        <i class="fas fa-arrow-left"></i> Back to Cart
+    </a>
+</div>
+
+<div class="row">
+    <div class="col-md-8">
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-shipping-fast"></i> Shipping Information</h5>
+            </div>
+            <div class="card-body">
+                <form method="post">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label class="form-label">Full Name</label>
+                        <input type="text" class="form-control" value="{{ customer.first_name }} {{ customer.last_name }}" readonly>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Email</label>
+                        <input type="email" class="form-control" value="{{ customer.email }}" readonly>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Phone</label>
+                        <input type="text" class="form-control" value="{{ customer.phone }}" readonly>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Shipping Address *</label>
+                        <textarea name="shipping_address" class="form-control" rows="3" required>{{ customer.address }}</textarea>
+                        <small class="form-text text-muted">Enter the complete shipping address</small>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Order Notes (Optional)</label>
+                        <textarea name="notes" class="form-control" rows="2" placeholder="Special instructions, delivery preferences, etc."></textarea>
+                    </div>
+                    
+                    <div class="card mb-3">
+                        <div class="card-header">
+                            <h6 class="mb-0">Order Items</h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="table table-sm">
+                                    <thead>
+                                        <tr>
+                                            <th>Product</th>
+                                            <th>Quantity</th>
+                                            <th>Price</th>
+                                            <th>Total</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for item in cart_items %}
+                                        <tr>
+                                            <td>{{ item.product.name }}</td>
+                                            <td>{{ item.quantity }}</td>
+                                            <td>${{ item.price|floatformat:2 }}</td>
+                                            <td>${{ item.total|floatformat:2 }}</td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle"></i> <strong>Payment:</strong> Payment will be processed after order confirmation. You will receive an invoice via email.
+                    </div>
+                    
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-primary btn-lg">
+                            <i class="fas fa-check"></i> Place Order
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Order Summary</h5>
+            </div>
+            <div class="card-body">
+                <table class="table table-sm">
+                    <tr>
+                        <td>Subtotal:</td>
+                        <td class="text-end">${{ subtotal|floatformat:2 }}</td>
+                    </tr>
+                    <tr>
+                        <td>Tax (10%):</td>
+                        <td class="text-end">${{ tax|floatformat:2 }}</td>
+                    </tr>
+                    <tr>
+                        <td>Shipping:</td>
+                        <td class="text-end">
+                            {% if shipping > 0 %}
+                                ${{ shipping|floatformat:2 }}
+                            {% else %}
+                                <span class="text-success">FREE</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    <tr class="table-active">
+                        <td><strong>Total:</strong></td>
+                        <td class="text-end"><strong class="text-primary" style="font-size: 1.2rem;">${{ total|floatformat:2 }}</strong></td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+        
+        <div class="card mt-3">
+            <div class="card-body">
+                <h6><i class="fas fa-shield-alt"></i> Secure Checkout</h6>
+                <p class="small text-muted mb-0">Your payment information is secure and encrypted.</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+

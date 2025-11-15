@@ -1,0 +1,95 @@
+{% extends 'crm/base.html' %}
+{% load static %}
+
+{% block title %}RFM Analysis - Retail CRM{% endblock %}
+
+{% block content %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
+
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pb-2 mb-3 border-bottom" style="border-color: rgba(255,255,255,0.08) !important;">
+    <h1 class="h2" style="color: #e8e4f0;"><i class="fas fa-chart-line"></i> RFM Analysis</h1>
+    <form method="post" style="display: inline;">
+        {% csrf_token %}
+        <button type="submit" name="calculate_all" class="btn btn-primary">
+            <i class="fas fa-calculator"></i> Calculate All RFM Scores
+        </button>
+    </form>
+</div>
+
+<div class="row mb-4">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Segment Distribution</h5>
+            </div>
+            <div class="card-body">
+                <canvas id="segmentChart"></canvas>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Top Customers by RFM</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-sm">
+                        <thead>
+                            <tr>
+                                <th>Customer</th>
+                                <th>RFM Score</th>
+                                <th>Segment</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for rfm in top_customers %}
+                            <tr>
+                                <td>{{ rfm.customer.get_full_name }}</td>
+                                <td><strong>{{ rfm.recency_score }}{{ rfm.frequency_score }}{{ rfm.monetary_score }}</strong></td>
+                                <td><span class="badge bg-info">{{ rfm.rfm_segment }}</span></td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="3" class="text-center">No RFM data available. Click "Calculate All RFM Scores" to generate.</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const segmentData = {
+        labels: [{% for segment, count in segment_distribution.items %}'{{ segment }}'{% if not forloop.last %},{% endif %}{% endfor %}],
+        datasets: [{
+            label: 'Customers',
+            data: [{% for segment, count in segment_distribution.items %}{{ count }}{% if not forloop.last %},{% endif %}{% endfor %}],
+            backgroundColor: [
+                'rgba(90, 26, 139, 0.8)',
+                'rgba(71, 19, 109, 0.8)',
+                'rgba(215, 184, 255, 0.8)',
+                'rgba(243, 233, 255, 0.8)',
+            ]
+        }]
+    };
+    
+    new Chart(document.getElementById('segmentChart'), {
+        type: 'doughnut',
+        data: segmentData,
+        options: {
+            responsive: true,
+            maintainAspectRatio: true,
+            plugins: {
+                legend: {
+                    labels: { color: '#e8e4f0' }
+                }
+            }
+        }
+    });
+</script>
+{% endblock %}
+

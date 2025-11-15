@@ -1,0 +1,340 @@
+<!-- ========================================== -->
+<!-- FILE 4: customer_detail.html -->
+<!-- LOCATION: C:\Users\User\Desktop\CRM\crm\templates\crm\customer_detail.html -->
+<!-- LINKED TO: views.customer_detail -->
+<!-- ========================================== -->
+{% extends 'crm/base.html' %}
+{% block title %}{{ customer.first_name }} {{ customer.last_name }} - Retail CRM{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pb-2 mb-3 border-bottom">
+    <h1 class="h2">
+        <i class="fas fa-user"></i> {{ customer.first_name }} {{ customer.last_name }}
+        {% if customer.status == 'vip' %}<span class="badge bg-warning">VIP</span>{% endif %}
+    </h1>
+    <div>
+        <a href="{% url 'customer_update' customer.pk %}" class="btn btn-warning">
+            <i class="fas fa-edit"></i> Edit
+        </a>
+        <a href="{% url 'customer_list' %}" class="btn btn-secondary">
+            <i class="fas fa-arrow-left"></i> Back
+        </a>
+    </div>
+</div>
+<div class="row">
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-info-circle"></i> Customer Information</h5>
+            </div>
+            <div class="card-body">
+                <p><strong>Email:</strong> {{ customer.email }}</p>
+                <p><strong>Phone:</strong> {{ customer.phone }}</p>
+                <p><strong>Type:</strong> {{ customer.get_customer_type_display }}</p>
+                <p><strong>Status:</strong> 
+                    {% if customer.status == 'active' %}
+                        <span class="badge bg-success">Active</span>
+                    {% elif customer.status == 'vip' %}
+                        <span class="badge bg-warning">VIP</span>
+                    {% else %}
+                        <span class="badge bg-secondary">Inactive</span>
+                    {% endif %}
+                </p>
+                {% if customer.company_name %}<p><strong>Company:</strong> {{ customer.company_name }}</p>{% endif %}
+                <p><strong>Address:</strong><br>{{ customer.address }}<br>
+                {{ customer.city }}{% if customer.postal_code %}, {{ customer.postal_code }}{% endif %}<br>
+                {{ customer.country }}</p>
+                <p><strong>Joined:</strong> {{ customer.date_joined|date:"F d, Y" }}</p>
+                <hr>
+                <h6>Statistics</h6>
+                <p><strong>Total Orders:</strong> {{ total_orders }}</p>
+                <p><strong>Total Spent:</strong> ${{ total_spent|floatformat:2 }}</p>
+                <p><strong>Avg Order Value:</strong> ${{ avg_order_value|floatformat:2 }}</p>
+            </div>
+        </div>
+        {% if customer.notes %}
+        <div class="card mt-3">
+            <div class="card-header"><h5 class="mb-0"><i class="fas fa-sticky-note"></i> Notes</h5></div>
+            <div class="card-body"><p>{{ customer.notes }}</p></div>
+        </div>
+        {% endif %}
+    </div>
+    <div class="col-md-8">
+        <!-- Tabs for different sections -->
+        <ul class="nav nav-tabs mb-3" id="customerTabs" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active" id="orders-tab" data-bs-toggle="tab" data-bs-target="#orders" type="button" role="tab">
+                    <i class="fas fa-shopping-cart"></i> Orders ({{ orders|length }})
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="interactions-tab" data-bs-toggle="tab" data-bs-target="#interactions" type="button" role="tab">
+                    <i class="fas fa-comments"></i> Interactions ({{ interactions|length }})
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="deals-tab" data-bs-toggle="tab" data-bs-target="#deals" type="button" role="tab">
+                    <i class="fas fa-handshake"></i> Deals ({{ deals|length }})
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="tasks-tab" data-bs-toggle="tab" data-bs-target="#tasks" type="button" role="tab">
+                    <i class="fas fa-tasks"></i> Tasks ({{ tasks|length }})
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="quotes-tab" data-bs-toggle="tab" data-bs-target="#quotes" type="button" role="tab">
+                    <i class="fas fa-file-invoice-dollar"></i> Quotes ({{ quotes|length }})
+                </button>
+            </li>
+        </ul>
+        
+        <div class="tab-content" id="customerTabsContent">
+            <!-- Orders Tab -->
+            <div class="tab-pane fade show active" id="orders" role="tabpanel">
+                <div class="card">
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Order #</th>
+                                        <th>Date</th>
+                                        <th>Amount</th>
+                                        <th>Status</th>
+                                        <th>Payment</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for order in orders %}
+                                    <tr>
+                                        <td><strong><a href="{% url 'order_detail' order.pk %}">{{ order.order_number }}</a></strong></td>
+                                        <td>{{ order.created_at|date:"M d, Y" }}</td>
+                                        <td>${{ order.total_amount|floatformat:2 }}</td>
+                                        <td>
+                                            {% if order.status == 'delivered' %}
+                                                <span class="badge bg-success">Delivered</span>
+                                            {% elif order.status == 'shipped' %}
+                                                <span class="badge bg-info">Shipped</span>
+                                            {% elif order.status == 'processing' %}
+                                                <span class="badge bg-primary">Processing</span>
+                                            {% else %}
+                                                <span class="badge bg-warning">{{ order.get_status_display }}</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            {% if order.payment_status == 'paid' %}
+                                                <span class="badge bg-success">Paid</span>
+                                            {% else %}
+                                                <span class="badge bg-danger">{{ order.get_payment_status_display }}</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            <a href="{% url 'order_detail' order.pk %}" class="btn btn-sm btn-primary"><i class="fas fa-eye"></i></a>
+                                        </td>
+                                    </tr>
+                                    {% empty %}
+                                    <tr><td colspan="6" class="text-center text-muted">No orders yet</td></tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Interactions Tab -->
+            <div class="tab-pane fade" id="interactions" role="tabpanel">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0"><i class="fas fa-comments"></i> Add Interaction</h5>
+                    </div>
+                    <div class="card-body">
+                        <form method="post">
+                            {% csrf_token %}
+                            <div class="row">
+                                <div class="col-md-4 mb-3">
+                                    <label class="form-label">Type *</label>
+                                    {{ form.interaction_type }}
+                                    {% if form.interaction_type.errors %}<div class="text-danger">{{ form.interaction_type.errors }}</div>{% endif %}
+                                </div>
+                                <div class="col-md-8 mb-3">
+                                    <label class="form-label">Subject *</label>
+                                    {{ form.subject }}
+                                    {% if form.subject.errors %}<div class="text-danger">{{ form.subject.errors }}</div>{% endif %}
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Description *</label>
+                                {{ form.description }}
+                                {% if form.description.errors %}<div class="text-danger">{{ form.description.errors }}</div>{% endif %}
+                            </div>
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">Outcome</label>
+                                    {{ form.outcome }}
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">Next Action</label>
+                                    {{ form.next_action }}
+                                </div>
+                            </div>
+                            <button type="submit" class="btn btn-primary"><i class="fas fa-plus"></i> Add Interaction</button>
+                        </form>
+                    </div>
+                </div>
+                <div class="card mt-3">
+                    <div class="card-header">
+                        <h5 class="mb-0">Interaction History</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="list-group">
+                            {% for interaction in interactions %}
+                            <div class="list-group-item">
+                                <div class="d-flex w-100 justify-content-between">
+                                    <h6 class="mb-1">
+                                        <span class="badge bg-primary">{{ interaction.get_interaction_type_display }}</span>
+                                        {{ interaction.subject }}
+                                    </h6>
+                                    <small>{{ interaction.created_at|date:"M d, Y H:i" }}</small>
+                                </div>
+                                <p class="mb-1">{{ interaction.description }}</p>
+                                {% if interaction.outcome %}
+                                    <p class="mb-1"><strong>Outcome:</strong> {{ interaction.outcome }}</p>
+                                {% endif %}
+                                {% if interaction.next_action %}
+                                    <p class="mb-1"><strong>Next Action:</strong> {{ interaction.next_action }}</p>
+                                {% endif %}
+                                <small class="text-muted">By {{ interaction.created_by.get_full_name|default:interaction.created_by.username }}</small>
+                            </div>
+                            {% empty %}
+                            <p class="text-muted text-center">No interactions recorded</p>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Deals Tab -->
+            <div class="tab-pane fade" id="deals" role="tabpanel">
+                <div class="card">
+                    <div class="card-body">
+                        {% if deals %}
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Deal</th>
+                                        <th>Amount</th>
+                                        <th>Stage</th>
+                                        <th>Probability</th>
+                                        <th>Expected Close</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for deal in deals %}
+                                    <tr>
+                                        <td><strong><a href="{% url 'deal_detail' deal.pk %}">{{ deal.title }}</a></strong></td>
+                                        <td>${{ deal.amount|floatformat:2 }}</td>
+                                        <td><span class="badge bg-{% if deal.stage == 'closed_won' %}success{% elif deal.stage == 'closed_lost' %}danger{% else %}info{% endif %}">{{ deal.get_stage_display }}</span></td>
+                                        <td>{{ deal.probability }}%</td>
+                                        <td>{{ deal.expected_close_date|date:"M d, Y" }}</td>
+                                        <td>
+                                            <a href="{% url 'deal_detail' deal.pk %}" class="btn btn-sm btn-primary"><i class="fas fa-eye"></i></a>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                        {% else %}
+                        <p class="text-muted text-center">No deals for this customer</p>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Tasks Tab -->
+            <div class="tab-pane fade" id="tasks" role="tabpanel">
+                <div class="card">
+                    <div class="card-body">
+                        {% if tasks %}
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Task</th>
+                                        <th>Assigned To</th>
+                                        <th>Priority</th>
+                                        <th>Status</th>
+                                        <th>Due Date</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for task in tasks %}
+                                    <tr class="{% if task.is_overdue %}table-danger{% endif %}">
+                                        <td><strong>{{ task.title }}</strong></td>
+                                        <td>{{ task.assigned_to.get_full_name|default:task.assigned_to.username }}</td>
+                                        <td><span class="badge bg-{% if task.priority == 'urgent' %}danger{% elif task.priority == 'high' %}warning{% else %}info{% endif %}">{{ task.get_priority_display }}</span></td>
+                                        <td><span class="badge bg-{% if task.status == 'completed' %}success{% else %}warning{% endif %}">{{ task.get_status_display }}</span></td>
+                                        <td>{{ task.due_date|date:"M d, Y" }}{% if task.is_overdue %} <span class="badge bg-danger">Overdue</span>{% endif %}</td>
+                                        <td>
+                                            <a href="{% url 'task_update' task.pk %}" class="btn btn-sm btn-primary"><i class="fas fa-edit"></i></a>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                        {% else %}
+                        <p class="text-muted text-center">No tasks for this customer</p>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Quotes Tab -->
+            <div class="tab-pane fade" id="quotes" role="tabpanel">
+                <div class="card">
+                    <div class="card-body">
+                        {% if quotes %}
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Quote #</th>
+                                        <th>Deal</th>
+                                        <th>Amount</th>
+                                        <th>Status</th>
+                                        <th>Valid Until</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for quote in quotes %}
+                                    <tr>
+                                        <td><strong><a href="{% url 'quote_detail' quote.pk %}">{{ quote.quote_number }}</a></strong></td>
+                                        <td>{% if quote.deal %}<a href="{% url 'deal_detail' quote.deal.pk %}">{{ quote.deal.title }}</a>{% else %}-{% endif %}</td>
+                                        <td>${{ quote.total_amount|floatformat:2 }}</td>
+                                        <td><span class="badge bg-{% if quote.status == 'accepted' %}success{% elif quote.status == 'rejected' %}danger{% elif quote.is_expired %}warning{% else %}info{% endif %}">{{ quote.get_status_display }}{% if quote.is_expired %} (Expired){% endif %}</span></td>
+                                        <td>{{ quote.valid_until|date:"M d, Y" }}</td>
+                                        <td>
+                                            <a href="{% url 'quote_detail' quote.pk %}" class="btn btn-sm btn-primary"><i class="fas fa-eye"></i></a>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                        {% else %}
+                        <p class="text-muted text-center">No quotes for this customer</p>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,58 @@
+{% extends 'crm/base.html' %}
+
+{% block title %}{{ action }} Ticket - Retail CRM{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pb-2 mb-3 border-bottom" style="border-color: rgba(255,255,255,0.08) !important;">
+    <h1 class="h2" style="color: #e8e4f0;"><i class="fas fa-ticket-alt"></i> {{ action }} Ticket</h1>
+    <a href="{% url 'ticket_list' %}" class="btn btn-outline-primary">Back to List</a>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        <form method="post">
+            {% csrf_token %}
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">Customer *</label>
+                    {{ form.customer }}
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">Priority *</label>
+                    {{ form.priority }}
+                </div>
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Subject *</label>
+                {{ form.subject }}
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Description *</label>
+                {{ form.description }}
+            </div>
+            <div class="row">
+                <div class="col-md-4 mb-3">
+                    <label class="form-label">Status *</label>
+                    {{ form.status }}
+                </div>
+                <div class="col-md-4 mb-3">
+                    <label class="form-label">Source</label>
+                    {{ form.source }}
+                </div>
+                <div class="col-md-4 mb-3">
+                    <label class="form-label">Assigned To</label>
+                    {{ form.assigned_to }}
+                </div>
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Category</label>
+                {{ form.category }}
+            </div>
+            <button type="submit" class="btn btn-primary">
+                <i class="fas fa-save"></i> Save Ticket
+            </button>
+        </form>
+    </div>
+</div>
+{% endblock %}
+

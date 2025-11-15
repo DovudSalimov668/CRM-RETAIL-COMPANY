@@ -1,0 +1,129 @@
+{% extends 'crm/customer/base_customer.html' %}
+
+{% block title %}Shop - Retail CRM{% endblock %}
+
+{% block content %}
+<style>
+    .product-card {
+        transition: transform 0.2s;
+        height: 100%;
+    }
+    .product-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    }
+    .product-image {
+        height: 200px;
+        object-fit: cover;
+        width: 100%;
+    }
+    .price-tag {
+        font-size: 1.5rem;
+        font-weight: bold;
+        color: #d7b8ff;
+    }
+</style>
+
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pb-2 mb-3 border-bottom" style="border-color: rgba(255,255,255,0.08) !important;">
+    <h1 class="h2" style="color: #e8e4f0;"><i class="fas fa-shopping-bag"></i> Shop</h1>
+    <div>
+        {% if user.is_authenticated %}
+            <a href="{% url 'view_cart' %}" class="btn btn-primary">
+                <i class="fas fa-shopping-cart"></i> Cart
+                {% if request.session.cart %}
+                    <span class="badge" style="background-color: #ff6b6b; color: #fff;">{{ request.session.cart|length }}</span>
+                {% endif %}
+            </a>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Search and Filters -->
+<div class="card mb-4">
+    <div class="card-body">
+        <form method="get" class="row g-3">
+            <div class="col-md-6">
+                <input type="text" name="q" class="form-control" placeholder="Search products..." value="{{ query }}">
+            </div>
+            <div class="col-md-4">
+                <select name="category" class="form-control">
+                    <option value="">All Categories</option>
+                    <option value="electronics" {% if category_filter == 'electronics' %}selected{% endif %}>Electronics</option>
+                    <option value="clothing" {% if category_filter == 'clothing' %}selected{% endif %}>Clothing</option>
+                    <option value="food" {% if category_filter == 'food' %}selected{% endif %}>Food & Beverage</option>
+                    <option value="books" {% if category_filter == 'books' %}selected{% endif %}>Books</option>
+                    <option value="home" {% if category_filter == 'home' %}selected{% endif %}>Home & Garden</option>
+                    <option value="sports" {% if category_filter == 'sports' %}selected{% endif %}>Sports</option>
+                    <option value="other" {% if category_filter == 'other' %}selected{% endif %}>Other</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <button type="submit" class="btn btn-primary w-100"><i class="fas fa-search"></i> Search</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Products Grid -->
+{% if products %}
+<div class="row">
+    {% for product in products %}
+    <div class="col-md-3 mb-4">
+        <div class="card product-card">
+            {% if product.image %}
+            <img src="{{ product.image.url }}" class="card-img-top product-image" alt="{{ product.name }}">
+            {% elif product.image_url %}
+            <img src="{{ product.image_url }}" class="card-img-top product-image" alt="{{ product.name }}">
+            {% else %}
+            <div class="product-image d-flex align-items-center justify-content-center" style="background: rgba(21, 16, 32, 0.6); border: 1px solid rgba(255,255,255,0.08);">
+                <i class="fas fa-image fa-3x" style="color: rgba(255,255,255,0.3);"></i>
+            </div>
+            {% endif %}
+            <div class="card-body d-flex flex-column">
+                <h5 class="card-title">{{ product.name }}</h5>
+                <p class="card-text text-muted small">{{ product.description|truncatewords:15 }}</p>
+                <div class="mt-auto">
+                    <div class="price-tag mb-2">${{ product.price|floatformat:2 }}</div>
+                    <div class="mb-2">
+                        <span class="badge bg-info">{{ product.get_category_display }}</span>
+                        {% if product.is_low_stock %}
+                            <span class="badge bg-warning">Low Stock</span>
+                        {% endif %}
+                    </div>
+                    <div class="d-grid gap-2">
+                        <a href="{% url 'product_detail_customer' product.pk %}" class="btn btn-primary btn-sm">
+                            <i class="fas fa-eye"></i> View Details
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+<!-- Pagination -->
+{% if products.has_other_pages %}
+<nav aria-label="Page navigation">
+    <ul class="pagination justify-content-center">
+        {% if products.has_previous %}
+            <li class="page-item"><a class="page-link" href="?page={{ products.previous_page_number }}{% if query %}&q={{ query }}{% endif %}{% if category_filter %}&category={{ category_filter }}{% endif %}">Previous</a></li>
+        {% endif %}
+        <li class="page-item active"><span class="page-link">Page {{ products.number }} of {{ products.paginator.num_pages }}</span></li>
+        {% if products.has_next %}
+            <li class="page-item"><a class="page-link" href="?page={{ products.next_page_number }}{% if query %}&q={{ query }}{% endif %}{% if category_filter %}&category={{ category_filter }}{% endif %}">Next</a></li>
+        {% endif %}
+    </ul>
+</nav>
+{% endif %}
+{% else %}
+<div class="card">
+    <div class="card-body text-center py-5">
+        <i class="fas fa-box-open fa-3x text-muted mb-3"></i>
+        <h5>No products found</h5>
+        <p class="text-muted">Try adjusting your search or filters</p>
+    </div>
+</div>
+{% endif %}
+{% endblock %}
+

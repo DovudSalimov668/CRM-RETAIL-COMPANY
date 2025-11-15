@@ -1,0 +1,162 @@
+{% extends 'crm/customer/base_customer.html' %}
+
+{% block title %}Order {{ order.order_number }}{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pb-2 mb-3 border-bottom">
+    <h1 class="h2"><i class="fas fa-receipt"></i> Order {{ order.order_number }}</h1>
+    <div>
+        <a href="{% url 'customer_order_history' %}" class="btn btn-secondary">
+            <i class="fas fa-arrow-left"></i> Back to Orders
+        </a>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-8">
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">Order Items</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Product</th>
+                                <th>Quantity</th>
+                                <th>Unit Price</th>
+                                <th>Total</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in order_items %}
+                            <tr>
+                                <td>
+                                    <strong>{{ item.product.name }}</strong><br>
+                                    <small class="text-muted">SKU: {{ item.product.sku }}</small>
+                                </td>
+                                <td>{{ item.quantity }}</td>
+                                <td>${{ item.unit_price|floatformat:2 }}</td>
+                                <td><strong>${{ item.subtotal|floatformat:2 }}</strong></td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        
+        {% if order.shipping_address %}
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-map-marker-alt"></i> Shipping Address</h5>
+            </div>
+            <div class="card-body">
+                <p class="mb-0">{{ order.shipping_address|linebreaks }}</p>
+            </div>
+        </div>
+        {% endif %}
+        
+        {% if order.tracking_number %}
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-truck"></i> Tracking Information</h5>
+            </div>
+            <div class="card-body">
+                <p><strong>Tracking Number:</strong> {{ order.tracking_number }}</p>
+                {% if order.shipped_date %}
+                <p><strong>Shipped Date:</strong> {{ order.shipped_date|date:"M d, Y" }}</p>
+                {% endif %}
+                {% if order.delivered_date %}
+                <p><strong>Delivered Date:</strong> {{ order.delivered_date|date:"M d, Y" }}</p>
+                {% endif %}
+            </div>
+        </div>
+        {% endif %}
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">Order Summary</h5>
+            </div>
+            <div class="card-body">
+                <table class="table table-sm">
+                    <tr>
+                        <td>Order Number:</td>
+                        <td class="text-end"><strong>{{ order.order_number }}</strong></td>
+                    </tr>
+                    <tr>
+                        <td>Order Date:</td>
+                        <td class="text-end">{{ order.created_at|date:"M d, Y" }}</td>
+                    </tr>
+                    <tr>
+                        <td>Status:</td>
+                        <td class="text-end">
+                            {% if order.status == 'delivered' %}
+                                <span class="badge bg-success">Delivered</span>
+                            {% elif order.status == 'shipped' %}
+                                <span class="badge bg-info">Shipped</span>
+                            {% elif order.status == 'processing' %}
+                                <span class="badge bg-primary">Processing</span>
+                            {% elif order.status == 'pending' %}
+                                <span class="badge bg-warning">Pending</span>
+                            {% else %}
+                                <span class="badge bg-secondary">{{ order.get_status_display }}</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>Payment Status:</td>
+                        <td class="text-end">
+                            {% if order.payment_status == 'paid' %}
+                                <span class="badge bg-success">Paid</span>
+                            {% elif order.payment_status == 'partial' %}
+                                <span class="badge bg-warning">Partial</span>
+                            {% else %}
+                                <span class="badge bg-danger">Unpaid</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                </table>
+                <hr>
+                <table class="table table-sm">
+                    <tr>
+                        <td>Subtotal:</td>
+                        <td class="text-end">${{ order.subtotal|floatformat:2 }}</td>
+                    </tr>
+                    <tr>
+                        <td>Tax:</td>
+                        <td class="text-end">${{ order.tax|floatformat:2 }}</td>
+                    </tr>
+                    <tr>
+                        <td>Shipping:</td>
+                        <td class="text-end">${{ order.shipping_cost|floatformat:2 }}</td>
+                    </tr>
+                    <tr>
+                        <td>Discount:</td>
+                        <td class="text-end">-${{ order.discount|floatformat:2 }}</td>
+                    </tr>
+                    <tr class="table-active">
+                        <td><strong>Total:</strong></td>
+                        <td class="text-end"><strong class="text-primary">${{ order.total_amount|floatformat:2 }}</strong></td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+        
+        {% if order.notes %}
+        <div class="card">
+            <div class="card-header">
+                <h6 class="mb-0">Order Notes</h6>
+            </div>
+            <div class="card-body">
+                <p class="mb-0">{{ order.notes }}</p>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+

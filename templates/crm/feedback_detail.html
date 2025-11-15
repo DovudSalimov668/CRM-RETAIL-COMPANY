@@ -1,0 +1,60 @@
+{% extends 'crm/base.html' %}
+
+{% block title %}Feedback Details - Retail CRM{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pb-2 mb-3 border-bottom" style="border-color: rgba(255,255,255,0.08) !important;">
+    <h1 class="h2" style="color: #e8e4f0;"><i class="fas fa-comment-dots"></i> Customer Feedback</h1>
+    <a href="{% url 'feedback_list' %}" class="btn btn-outline-primary">Back to List</a>
+</div>
+
+<div class="card mb-3">
+    <div class="card-header">
+        <h5 class="mb-0">Feedback Information</h5>
+    </div>
+    <div class="card-body">
+        <div class="row">
+            <div class="col-md-6">
+                <p><strong>Customer:</strong> {{ feedback.customer.get_full_name }}</p>
+                <p><strong>Type:</strong> <span class="badge bg-info">{{ feedback.get_feedback_type_display }}</span></p>
+                <p><strong>Rating:</strong> 
+                    {% if feedback.rating == 5 %}
+                        <span class="badge bg-success">★★★★★ (5)</span>
+                    {% elif feedback.rating == 4 %}
+                        <span class="badge bg-success">★★★★☆ (4)</span>
+                    {% elif feedback.rating == 3 %}
+                        <span class="badge bg-warning">★★★☆☆ (3)</span>
+                    {% elif feedback.rating == 2 %}
+                        <span class="badge bg-warning">★★☆☆☆ (2)</span>
+                    {% else %}
+                        <span class="badge bg-danger">★☆☆☆☆ (1)</span>
+                    {% endif %}
+                </p>
+                <p><strong>Public:</strong> 
+                    {% if feedback.is_public %}
+                        <span class="badge bg-success">Yes</span>
+                    {% else %}
+                        <span class="badge bg-secondary">No</span>
+                    {% endif %}
+                </p>
+            </div>
+            <div class="col-md-6">
+                <p><strong>Created:</strong> {{ feedback.created_at|date:"M d, Y H:i" }}</p>
+                {% if feedback.order %}
+                    <p><strong>Order:</strong> <a href="{% url 'order_detail' feedback.order.pk %}">{{ feedback.order.order_number }}</a></p>
+                {% endif %}
+                {% if feedback.product %}
+                    <p><strong>Product:</strong> {{ feedback.product.name }}</p>
+                {% endif %}
+            </div>
+        </div>
+        <div class="mt-3">
+            <strong>Comment:</strong>
+            <div class="mt-2 p-3" style="background-color: rgba(255,255,255,0.05); border-radius: 5px;">
+                {{ feedback.comment|linebreaks|default:"No comment provided." }}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+

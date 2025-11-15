@@ -1,0 +1,536 @@
+<!-- FILE: crm/templates/crm/register.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Register - Retail CRM</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #5a1a8b;
+            --primary-dark: #47136d;
+            --primary-light: #d7b8ff;
+            --purple-light: #e8d5ff;
+            --bg-body: #f8f9fa;
+            --card-bg: #ffffff;
+            --border-color: rgba(90, 26, 139, 0.2);
+            --text-primary: #1a1a1a;
+            --text-secondary: #666666;
+            --text-muted: #999999;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: var(--bg-body);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-primary);
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            padding: 20px;
+        }
+
+        .register-container {
+            width: 100%;
+            max-width: 750px;
+        }
+
+        .register-card {
+            background: var(--card-bg);
+            border-radius: 20px;
+            border: 2px solid var(--border-color);
+            box-shadow: 0 8px 32px rgba(90, 26, 139, 0.15);
+            padding: 40px;
+        }
+
+        /* Navigation Links */
+        .nav-links {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+            gap: 12px;
+            margin-bottom: 32px;
+            font-size: 0.9rem;
+        }
+
+        .nav-links a {
+            color: var(--primary-color);
+            text-decoration: none;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            font-weight: 500;
+        }
+
+        .nav-links a:hover {
+            color: var(--primary-dark);
+            transform: translateX(2px);
+        }
+
+        .nav-links a i {
+            font-size: 0.85rem;
+        }
+
+        /* Header */
+        .register-header {
+            text-align: center;
+            margin-bottom: 36px;
+        }
+
+        .register-header-icon {
+            width: 72px;
+            height: 72px;
+            background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 20px;
+            box-shadow: 0 8px 24px rgba(90, 26, 139, 0.3);
+        }
+
+        .register-header-icon i {
+            font-size: 2rem;
+            color: #fff;
+        }
+
+        .register-header h2 {
+            color: var(--text-primary);
+            font-weight: 700;
+            font-size: 1.875rem;
+            margin-bottom: 8px;
+        }
+
+        .register-header p {
+            color: var(--text-secondary);
+            font-size: 1rem;
+            margin: 0;
+        }
+
+        /* Form Styles */
+        .form-label {
+            color: var(--text-primary);
+            font-weight: 500;
+            font-size: 0.9rem;
+            margin-bottom: 8px;
+            display: block;
+        }
+
+        .form-label .text-danger {
+            color: #dc3545;
+        }
+
+        .form-control,
+        .form-select {
+            color: var(--text-primary);
+            background: #ffffff;
+            border: 2px solid var(--border-color);
+            border-radius: 10px;
+            padding: 12px 16px;
+            font-size: 0.95rem;
+            transition: all 0.3s ease;
+            height: auto;
+        }
+
+        .form-control::placeholder {
+            color: var(--text-muted);
+            opacity: 0.8;
+        }
+
+        .form-control:focus,
+        .form-select:focus {
+            background: #ffffff;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(90, 26, 139, 0.1);
+            color: var(--text-primary);
+            outline: none;
+        }
+
+        .form-control:disabled,
+        .form-select:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            background: #f8f9fa;
+        }
+
+        /* Password Toggle */
+        .password-field {
+            position: relative;
+        }
+
+        .toggle-password {
+            position: absolute;
+            right: 16px;
+            top: 38px;
+            background: none;
+            border: none;
+            color: var(--text-secondary);
+            cursor: pointer;
+            padding: 4px 8px;
+            transition: all 0.3s ease;
+            z-index: 10;
+        }
+
+        .toggle-password:hover {
+            color: var(--primary-color);
+        }
+
+        .toggle-password:focus {
+            outline: 2px solid var(--primary-color);
+            outline-offset: 2px;
+            border-radius: 4px;
+        }
+
+        /* Error Messages */
+        .error-message {
+            color: #dc3545;
+            font-size: 0.85rem;
+            margin-top: 6px;
+            display: block;
+        }
+
+        .error-message ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .error-message li:before {
+            content: "• ";
+            margin-right: 4px;
+        }
+
+        /* Alert Messages */
+        .alert {
+            border-radius: 10px;
+            border: 2px solid;
+            padding: 12px 16px;
+            margin-bottom: 20px;
+        }
+
+        .alert-danger {
+            background: rgba(220, 53, 69, 0.1);
+            color: #dc3545;
+            border-color: rgba(220, 53, 69, 0.3);
+        }
+
+        /* Buttons */
+        .btn {
+            border-radius: 10px;
+            padding: 12px 24px;
+            font-weight: 600;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            border: none;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
+            color: #fff;
+            box-shadow: 0 4px 16px rgba(90, 26, 139, 0.3);
+        }
+
+        .btn-primary:hover {
+            background: linear-gradient(135deg, var(--primary-dark), #3a0f5a);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(90, 26, 139, 0.4);
+            color: #fff;
+        }
+
+        .btn-primary:active {
+            transform: translateY(0);
+        }
+
+        .btn-primary i {
+            margin-right: 8px;
+        }
+
+        /* Footer Link */
+        .register-footer {
+            text-align: center;
+            margin-top: 28px;
+            padding-top: 24px;
+            border-top: 2px solid var(--border-color);
+        }
+
+        .register-footer p {
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+            margin: 0;
+        }
+
+        .register-footer a {
+            color: var(--primary-color);
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .register-footer a:hover {
+            color: var(--primary-dark);
+            text-decoration: underline;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .register-card {
+                padding: 32px 24px;
+            }
+
+            .register-header h2 {
+                font-size: 1.5rem;
+            }
+
+            .register-header-icon {
+                width: 64px;
+                height: 64px;
+            }
+
+            .register-header-icon i {
+                font-size: 1.75rem;
+            }
+
+            .nav-links {
+                flex-direction: column;
+                gap: 8px;
+            }
+
+            .btn {
+                padding: 14px 20px;
+            }
+        }
+
+        @media (max-width: 576px) {
+            body {
+                padding: 16px;
+            }
+
+            .register-card {
+                padding: 24px 20px;
+            }
+
+            .toggle-password {
+                right: 12px;
+            }
+        }
+
+        /* Form Row Spacing */
+        .form-row {
+            margin-bottom: 20px;
+        }
+
+        .form-row:last-of-type {
+            margin-bottom: 0;
+        }
+
+        /* Help Text */
+        .form-text {
+            color: var(--text-secondary);
+            font-size: 0.85rem;
+            margin-top: 6px;
+        }
+    </style>
+</head>
+<body>
+    <div class="register-container">
+        <div class="register-card">
+            <!-- Navigation Links -->
+            <div class="nav-links">
+                <a href="{% url 'home' %}">
+                    <i class="fas fa-house"></i>
+                    <span>Home</span>
+                </a>
+                <a href="{% url 'docs' %}">
+                    <i class="fas fa-book"></i>
+                    <span>Docs</span>
+                </a>
+                <a href="{% url 'login_choice' %}">
+                    <i class="fas fa-right-to-bracket"></i>
+                    <span>Sign in options</span>
+                </a>
+            </div>
+
+            <!-- Header -->
+            <div class="register-header">
+                <div class="register-header-icon">
+                    <i class="fas fa-user-plus"></i>
+                </div>
+                <h2>Create Your Account</h2>
+                <p>Join our CRM platform today</p>
+            </div>
+
+            <!-- Non-field errors (if any) -->
+            {% if form.non_field_errors %}
+                <div class="alert alert-danger">
+                    {{ form.non_field_errors }}
+                </div>
+            {% endif %}
+            
+            <!-- Registration Form -->
+            <form method="post" novalidate>
+                {% csrf_token %}
+                
+                <!-- Username and Email -->
+                <div class="row form-row">
+                    <div class="col-md-6 mb-3 mb-md-0">
+                        <label for="id_username" class="form-label">
+                            Username <span class="text-danger">*</span>
+                        </label>
+                        {{ form.username }}
+                        {% if form.username.errors %}
+                            <span class="error-message">{{ form.username.errors }}</span>
+                        {% endif %}
+                    </div>
+                    <div class="col-md-6">
+                        <label for="id_email" class="form-label">
+                            Email <span class="text-danger">*</span>
+                        </label>
+                        {{ form.email }}
+                        {% if form.email.errors %}
+                            <span class="error-message">{{ form.email.errors }}</span>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <!-- First Name and Last Name -->
+                <div class="row form-row">
+                    <div class="col-md-6 mb-3 mb-md-0">
+                        <label for="id_first_name" class="form-label">
+                            First Name <span class="text-danger">*</span>
+                        </label>
+                        {{ form.first_name }}
+                        {% if form.first_name.errors %}
+                            <span class="error-message">{{ form.first_name.errors }}</span>
+                        {% endif %}
+                    </div>
+                    <div class="col-md-6">
+                        <label for="id_last_name" class="form-label">
+                            Last Name <span class="text-danger">*</span>
+                        </label>
+                        {{ form.last_name }}
+                        {% if form.last_name.errors %}
+                            <span class="error-message">{{ form.last_name.errors }}</span>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <!-- Phone and Company -->
+                <div class="row form-row">
+                    <div class="col-md-6 mb-3 mb-md-0">
+                        <label for="id_phone" class="form-label">
+                            Phone <span class="text-danger">*</span>
+                        </label>
+                        {{ form.phone }}
+                        {% if form.phone.errors %}
+                            <span class="error-message">{{ form.phone.errors }}</span>
+                        {% endif %}
+                    </div>
+                    <div class="col-md-6">
+                        <label for="id_company_name" class="form-label">
+                            Company Name <small class="text-muted">(Optional)</small>
+                        </label>
+                        {{ form.company_name }}
+                    </div>
+                </div>
+                
+                <!-- Passwords -->
+                <div class="row form-row">
+                    <div class="col-md-6 mb-3 mb-md-0">
+                        <div class="password-field">
+                            <label for="id_password1" class="form-label">
+                                Password <span class="text-danger">*</span>
+                            </label>
+                            {{ form.password1 }}
+                            <button type="button" class="toggle-password" data-target="id_password1" aria-label="Show password">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                            {% if form.password1.errors %}
+                                <span class="error-message">{{ form.password1.errors }}</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="password-field">
+                            <label for="id_password2" class="form-label">
+                                Confirm Password <span class="text-danger">*</span>
+                            </label>
+                            {{ form.password2 }}
+                            <button type="button" class="toggle-password" data-target="id_password2" aria-label="Show password">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                            {% if form.password2.errors %}
+                                <span class="error-message">{{ form.password2.errors }}</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Submit Button -->
+                <div class="d-grid gap-2 mt-4">
+                    <button type="submit" class="btn btn-primary btn-lg">
+                        <i class="fas fa-user-plus"></i>
+                        Create Account
+                    </button>
+                </div>
+            </form>
+            
+            <!-- Footer -->
+            <div class="register-footer">
+                <p>
+                    Already have an account? 
+                    <a href="{% url 'customer_login' %}">Login here</a>
+                </p>
+            </div>
+        </div>
+    </div>
+    
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Password toggle functionality
+        document.querySelectorAll('.toggle-password').forEach(button => {
+            button.addEventListener('click', function() {
+                const targetId = this.getAttribute('data-target');
+                const input = document.getElementById(targetId);
+                const icon = this.querySelector('i');
+                
+                if (!input) return;
+                
+                if (input.type === 'password') {
+                    input.type = 'text';
+                    icon.classList.remove('fa-eye');
+                    icon.classList.add('fa-eye-slash');
+                    this.setAttribute('aria-label', 'Hide password');
+                } else {
+                    input.type = 'password';
+                    icon.classList.remove('fa-eye-slash');
+                    icon.classList.add('fa-eye');
+                    this.setAttribute('aria-label', 'Show password');
+                }
+            });
+        });
+
+        // Form validation feedback
+        document.addEventListener('DOMContentLoaded', function() {
+            const form = document.querySelector('form');
+            if (form) {
+                form.addEventListener('submit', function() {
+                    const submitButton = this.querySelector('button[type="submit"]');
+                    if (submitButton) {
+                        submitButton.disabled = true;
+                        submitButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Creating Account...';
+                    }
+                });
+            }
+        });
+    </script>
+</body>
+</html>

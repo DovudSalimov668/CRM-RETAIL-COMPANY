@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Staff Documentation - Retail CRM</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #5a1a8b;
+            --primary-dark: #47136d;
+            --primary-light: #d7b8ff;
+            --purple-light: #e8d5ff;
+            --bg-body: #f8f9fa;
+            --card-bg: #ffffff;
+            --border-color: rgba(90, 26, 139, 0.2);
+            --text-primary: #1a1a1a;
+            --text-secondary: #666666;
+        }
+        
+        body { 
+            background: var(--bg-body); 
+            color: var(--text-primary);
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+        }
+        
+        .navbar { 
+            background: var(--card-bg) !important;
+            border-bottom: 2px solid var(--primary-color);
+            box-shadow: 0 2px 10px rgba(90, 26, 139, 0.1);
+        }
+        
+        .navbar .navbar-brand, .navbar .nav-link { 
+            color: var(--primary-color) !important;
+            font-weight: 500;
+        }
+        
+        .navbar .nav-link:hover { 
+            color: var(--primary-dark) !important; 
+        }
+        
+        .navbar-toggler {
+            border-color: var(--primary-color);
+        }
+        
+        .navbar-toggler-icon {
+            background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 30'%3e%3cpath stroke='rgba%2890, 26, 139, 1%29' stroke-linecap='round' stroke-miterlimit='10' stroke-width='2' d='M4 7h22M4 15h22M4 23h22'/%3e%3c/svg%3e");
+        }
+        
+        .glass { 
+            background: var(--card-bg);
+            border: 2px solid var(--border-color);
+            border-radius: 18px;
+            box-shadow: 0 4px 20px rgba(90, 26, 139, 0.1);
+            padding: 30px;
+            margin-bottom: 24px;
+        }
+        
+        .btn-primary { 
+            background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
+            border: none;
+            color: #fff;
+            font-weight: 600;
+        }
+        
+        .btn-primary:hover { 
+            background: linear-gradient(135deg, var(--primary-dark), #3a0f5a);
+            color: #fff;
+        }
+        
+        .muted, .text-muted { 
+            color: var(--text-secondary) !important; 
+        }
+        
+        code { 
+            background: var(--purple-light);
+            color: var(--primary-dark);
+            padding: 2px 6px;
+            border-radius: 6px;
+            font-size: 0.9em;
+        }
+        
+        h2, h3, h4 {
+            color: var(--text-primary) !important;
+        }
+        
+        .section-icon {
+            color: var(--primary-color);
+            margin-right: 12px;
+        }
+        
+        ul, ol {
+            color: var(--text-secondary);
+        }
+        
+        .feature-card {
+            border-left: 4px solid var(--primary-color);
+            padding-left: 20px;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg">
+        <div class="container">
+            <a class="navbar-brand" href="{% url 'home' %}"><i class="fas fa-store"></i> Retail CRM</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navMain">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navMain">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item"><a class="nav-link" href="{% url 'home' %}">Home</a></li>
+                    <li class="nav-item"><a class="nav-link" href="{% url 'docs' %}">Docs</a></li>
+                    <li class="nav-item"><a class="nav-link" href="{% url 'docs_customer' %}">Customer Docs</a></li>
+                    {% if user.is_authenticated and user.is_staff %}
+                        <li class="nav-item"><a class="nav-link" href="{% url 'dashboard' %}">Dashboard</a></li>
+                    {% endif %}
+                </ul>
+            </div>
+        </div>
+    </nav>
+    <main class="container my-5">
+        <div class="glass">
+            <h2 class="mb-3"><i class="fas fa-user-shield section-icon"></i>Staff/Admin Documentation</h2>
+            <p class="muted">Complete guide for managing the Retail CRM system</p>
+        </div>
+
+        <div class="glass">
+            <h3 class="mb-3"><i class="fas fa-sign-in-alt section-icon"></i>Getting Started</h3>
+            <ol>
+                <li><strong>Login:</strong> Navigate to <code>/staff/login/</code> or use the "Staff Login" option from the home page.</li>
+                <li><strong>Dashboard:</strong> After login, you'll see the main dashboard with key metrics and statistics.</li>
+                <li><strong>Navigation:</strong> Use the sidebar menu to access all CRM features.</li>
+            </ol>
+        </div>
+
+        <div class="glass">
+            <h3 class="mb-3"><i class="fas fa-users section-icon"></i>Customer Management</h3>
+            <div class="feature-card">
+                <h4><i class="fas fa-list"></i> Customer List</h4>
+                <ul>
+                    <li>View all customers with search and filter options</li>
+                    <li>Filter by status (Lead, Prospect, Active, Inactive, VIP)</li>
+                    <li>Filter by source (Website, Referral, Social Media, etc.)</li>
+                    <li>Search by name, email, phone, or company</li>
+                    <li>Export customers to CSV format</li>
+                </ul>
+            </div>
+            <div class="feature-card">
+                <h4><i class="fas fa-user-plus"></i> Create Customer</h4>
+                <ul>
+                    <li>Add new customers with complete profile information</li>
+                    <li>Upload profile pictures (stored in <code>media/profiles/</code>)</li>
+                    <li>Set customer type (Individual, Business, VIP)</li>
+                    <li>Assign status and source</li>
+                </ul>
+            </div>
+            <div class="feature-card">
+                <h4><i class="fas fa-user-edit"></i> Customer Details</h4>
+                <ul>
+                    <li>View complete customer profile and history</li>
+                    <li>See all orders, interactions, and deals</li>
+                    <li>Edit customer information</li>
+                    <li>Track customer analytics and RFM scores</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="glass">
+            <h3 class="mb-3"><i class="fas fa-shopping-cart section-icon"></i>Order Management</h3>
+            <div class="feature-card">
+                <h4><i class="fas fa-list"></i> Order List</h4>
+                <ul>
+                    <li>View all orders with status filters</li>
+                    <li>Search orders by number, customer, or date</li>
+                    <li>Filter by payment status and order status</li>
+                </ul>
+            </div>
+            <div class="feature-card">
+                <h4><i class="fas fa-plus"></i> Create Order</h4>
+                <ul>
+                    <li>Manually create orders for customers</li>
+                    <li>Add multiple products with quantities</li>
+                    <li>Set shipping address and notes</li>
+                    <li>Calculate totals automatically</li>
+                </ul>
+            </div>
+            <div class="feature-card">
+                <h4><i class="fas fa-edit"></i> Update Orders</h4>
+                <ul>
+                    <li>Change order status (Pending, Processing, Shipped, Delivered, Cancelled)</li>
+                    <li>Update payment status</li>
+                    <li>Modify order items and quantities</li>
+                    <li>Add notes and tracking information</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="glass">
+            <h3 class="mb-3"><i class="fas fa-box section-icon"></i>Product Management</h3>
+            <div class="feature-card">
+                <h4><i class="fas fa-list"></i> Product List</h4>
+                <ul>
+                    <li>View all products with thumbnails</li>
+                    <li>See stock levels and pricing</li>
+                    <li>Filter by category and status</li>
+                </ul>
+            </div>
+            <div class="feature-card">
+                <h4><i class="fas fa-plus"></i> Create Product</h4>
+                <ul>
+                    <li>Add products with images (upload or URL)</li>
+                    <li>Set SKU, name, description, and category</li>
+                    <li>Configure pricing and stock quantity</li>
+                    <li>Upload images stored in <code>media/products/</code></li>
+                </ul>
+            </div>
+            <div class="feature-card">
+                <h4><i class="fas fa-edit"></i> Product Details</h4>
+                <ul>
+                    <li>Update product information</li>
+                    <li>Manage stock levels</li>
+                    <li>Change pricing and status</li>
+                    <li>Update product images</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="glass">
+            <h3 class="mb-3"><i class="fas fa-chart-bar section-icon"></i>Reports & Analytics</h3>
+            <div class="feature-card">
+                <h4><i class="fas fa-chart-line"></i> Dashboard Analytics</h4>
+                <ul>
+                    <li>View total customers, orders, and revenue</li>
+                    <li>Monthly revenue charts</li>
+                    <li>Customer status distribution</li>
+                    <li>Recent activity and orders</li>
+                </ul>
+            </div>
+            <div class="feature-card">
+                <h4><i class="fas fa-file-alt"></i> Reports Page</h4>
+                <ul>
+                    <li>Sales reports and statistics</li>
+                    <li>Top customers and products</li>
+                    <li>Revenue trends and analysis</li>
+                    <li>Deal pipeline overview</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="glass">
+            <h3 class="mb-3"><i class="fas fa-tasks section-icon"></i>Task Management</h3>
+            <ul>
+                <li>Create and assign tasks to team members</li>
+                <li>Set due dates and priorities</li>
+                <li>Track task completion status</li>
+                <li>Link tasks to customers or deals</li>
+            </ul>
+        </div>
+
+        <div class="glass">
+            <h3 class="mb-3"><i class="fas fa-handshake section-icon"></i>Deal Management</h3>
+            <ul>
+                <li>Create and track sales deals</li>
+                <li>Set deal stages (Prospecting, Qualification, Proposal, Negotiation, Closed Won/Lost)</li>
+                <li>Assign deal values and probabilities</li>
+                <li>Link deals to customers</li>
+            </ul>
+        </div>
+
+        <div class="glass">
+            <h3 class="mb-3"><i class="fas fa-file-invoice section-icon"></i>Quote Management</h3>
+            <ul>
+                <li>Generate quotes for customers</li>
+                <li>Add products and services to quotes</li>
+                <li>Set expiration dates</li>
+                <li>Convert quotes to orders</li>
+            </ul>
+        </div>
+
+        <div class="glass">
+            <h3 class="mb-3"><i class="fas fa-cogs section-icon"></i>Advanced Features</h3>
+            <div class="feature-card">
+                <h4><i class="fas fa-users-cog"></i> Customer Segmentation</h4>
+                <ul>
+                    <li>Create dynamic customer segments</li>
+                    <li>Set criteria for automatic segment assignment</li>
+                    <li>View segment statistics</li>
+                </ul>
+            </div>
+            <div class="feature-card">
+                <h4><i class="fas fa-bullhorn"></i> Marketing Campaigns</h4>
+                <ul>
+                    <li>Create and manage marketing campaigns</li>
+                    <li>Target specific customer segments</li>
+                    <li>Track campaign performance (sent, opened, clicked)</li>
+                </ul>
+            </div>
+            <div class="feature-card">
+                <h4><i class="fas fa-ticket-alt"></i> Support Tickets</h4>
+                <ul>
+                    <li>Manage customer support tickets</li>
+                    <li>Set priority levels and status</li>
+                    <li>Track response times</li>
+                    <li>Communicate with customers via ticket messages</li>
+                </ul>
+            </div>
+            <div class="feature-card">
+                <h4><i class="fas fa-star"></i> Loyalty Programs</h4>
+                <ul>
+                    <li>View customer loyalty points and tiers</li>
+                    <li>Track point transactions</li>
+                    <li>Manage loyalty program settings</li>
+                </ul>
+            </div>
+            <div class="feature-card">
+                <h4><i class="fas fa-robot"></i> Automation Workflows</h4>
+                <ul>
+                    <li>Create automated workflows</li>
+                    <li>Set triggers and actions</li>
+                    <li>Track workflow executions</li>
+                </ul>
+            </div>
+            <div class="feature-card">
+                <h4><i class="fas fa-chart-pie"></i> RFM Analysis</h4>
+                <ul>
+                    <li>Analyze customer Recency, Frequency, and Monetary value</li>
+                    <li>View RFM segments</li>
+                    <li>Identify high-value customers</li>
+                </ul>
+            </div>
+            <div class="feature-card">
+                <h4><i class="fas fa-shopping-cart"></i> Cart Abandonment</h4>
+                <ul>
+                    <li>View abandoned shopping carts</li>
+                    <li>Track recovery rates</li>
+                    <li>Send reminder emails to customers</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="glass">
+            <h3 class="mb-3"><i class="fas fa-info-circle section-icon"></i>Technical Notes</h3>
+            <ul>
+                <li><strong>Media Files:</strong> Profile pictures are stored in <code>media/profiles/</code> and product images in <code>media/products/</code></li>
+                <li><strong>CSV Export:</strong> Customer data can be exported from the Customer List page</li>
+                <li><strong>Permissions:</strong> Staff pages require authentication and redirect to <code>/staff/login/</code> if not logged in</li>
+                <li><strong>Database:</strong> The system uses PostgreSQL for data storage</li>
+                <li><strong>Image Uploads:</strong> Both file uploads and image URLs are supported for products</li>
+            </ul>
+        </div>
+
+        <div class="glass">
+            <h3 class="mb-3"><i class="fas fa-question-circle section-icon"></i>Quick Tips</h3>
+            <ul>
+                <li>Use the search and filter options to quickly find customers, orders, or products</li>
+                <li>Check the dashboard regularly for key metrics and recent activity</li>
+                <li>Export customer data regularly for backup purposes</li>
+                <li>Keep product stock levels updated to avoid overselling</li>
+                <li>Use tasks to track follow-ups and important deadlines</li>
+                <li>Monitor the deal pipeline to forecast revenue</li>
+            </ul>
+        </div>
+    </main>
+    <footer class="container py-4">
+        <div class="d-flex justify-content-between">
+            <div class="text-muted">© {% now "Y" %} Retail CRM</div>
+            <div>
+                <a class="text-decoration-none me-3" href="{% url 'docs' %}" style="color: var(--primary-color);">All Docs</a>
+                <a class="text-decoration-none" href="{% url 'home' %}" style="color: var(--primary-color);">Home</a>
+            </div>
+        </div>
+    </footer>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
+

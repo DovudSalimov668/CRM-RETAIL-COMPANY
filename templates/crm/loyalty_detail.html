@@ -1,0 +1,125 @@
+{% extends 'crm/base.html' %}
+
+{% block title %}Loyalty Program Details - Retail CRM{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pb-2 mb-3 border-bottom" style="border-color: rgba(255,255,255,0.08) !important;">
+    <h1 class="h2" style="color: #e8e4f0;"><i class="fas fa-star"></i> Loyalty Program - {{ loyalty.customer.get_full_name }}</h1>
+    <a href="{% url 'loyalty_list' %}" class="btn btn-outline-primary">Back to List</a>
+</div>
+
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="stat-card">
+            <h6>Points Balance</h6>
+            <h3>{{ loyalty.points_balance }}</h3>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stat-card" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); color: #fff !important;">
+            <h6 style="color: #fff !important;">Lifetime Points</h6>
+            <h3 style="color: #fff !important;">{{ loyalty.lifetime_points }}</h3>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stat-card" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); color: #fff !important;">
+            <h6 style="color: #fff !important;">Total Redeemed</h6>
+            <h3 style="color: #fff !important;">{{ loyalty.total_redeemed }}</h3>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stat-card" style="background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%); color: #fff !important;">
+            <h6 style="color: #fff !important;">Tier</h6>
+            <h3 style="color: #fff !important;">
+                {% if loyalty.tier == 'platinum' %}
+                    <span class="badge" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: #fff;">Platinum</span>
+                {% elif loyalty.tier == 'gold' %}
+                    <span class="badge bg-warning text-dark">Gold</span>
+                {% elif loyalty.tier == 'silver' %}
+                    <span class="badge bg-secondary">Silver</span>
+                {% else %}
+                    <span class="badge" style="background-color: #cd7f32; color: #fff;">Bronze</span>
+                {% endif %}
+            </h3>
+        </div>
+    </div>
+</div>
+
+<div class="card mb-3">
+    <div class="card-header">
+        <h5 class="mb-0">Customer Information</h5>
+    </div>
+    <div class="card-body">
+        <div class="row">
+            <div class="col-md-6">
+                <p><strong>Customer:</strong> {{ loyalty.customer.get_full_name }}</p>
+                <p><strong>Email:</strong> {{ loyalty.customer.email }}</p>
+                <p><strong>Phone:</strong> {{ loyalty.customer.phone }}</p>
+            </div>
+            <div class="col-md-6">
+                <p><strong>Join Date:</strong> {{ loyalty.join_date|date:"M d, Y" }}</p>
+                <p><strong>Last Updated:</strong> {{ loyalty.updated_at|date:"M d, Y H:i" }}</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header">
+        <h5 class="mb-0">Recent Transactions</h5>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Type</th>
+                        <th>Points</th>
+                        <th>Description</th>
+                        <th>Order</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for transaction in transactions %}
+                    <tr>
+                        <td>{{ transaction.created_at|date:"M d, Y H:i" }}</td>
+                        <td>
+                            {% if transaction.transaction_type == 'earned' %}
+                                <span class="badge bg-success">Earned</span>
+                            {% elif transaction.transaction_type == 'redeemed' %}
+                                <span class="badge bg-warning">Redeemed</span>
+                            {% elif transaction.transaction_type == 'expired' %}
+                                <span class="badge bg-danger">Expired</span>
+                            {% else %}
+                                <span class="badge bg-secondary">{{ transaction.get_transaction_type_display }}</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if transaction.transaction_type == 'earned' %}
+                                <span class="text-success">+{{ transaction.points }}</span>
+                            {% else %}
+                                <span class="text-danger">-{{ transaction.points }}</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ transaction.description }}</td>
+                        <td>
+                            {% if transaction.order %}
+                                <a href="{% url 'order_detail' transaction.order.pk %}">{{ transaction.order.order_number }}</a>
+                            {% else %}
+                                -
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="5" class="text-center">No transactions found.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}
+

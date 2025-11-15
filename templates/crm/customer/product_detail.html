@@ -1,0 +1,98 @@
+{% extends 'crm/customer/base_customer.html' %}
+
+{% block title %}{{ product.name }} - Shop{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-6">
+        {% if product.image %}
+        <img src="{{ product.image.url }}" class="img-fluid rounded img-thumbnail" alt="{{ product.name }}">
+        {% elif product.image_url %}
+        <img src="{{ product.image_url }}" class="img-fluid rounded img-thumbnail" alt="{{ product.name }}">
+        {% else %}
+        <div class="d-flex align-items-center justify-content-center" style="height: 400px; border-radius: 10px; background: rgba(21, 16, 32, 0.6); border: 1px solid rgba(255,255,255,0.08);">
+            <i class="fas fa-image fa-5x" style="color: rgba(255,255,255,0.3);"></i>
+        </div>
+        {% endif %}
+    </div>
+    <div class="col-md-6">
+        <h1 style="color: #e8e4f0;">{{ product.name }}</h1>
+        <div class="mb-3">
+            <span class="badge bg-primary">{{ product.get_category_display }}</span>
+            <span class="badge bg-info">SKU: {{ product.sku }}</span>
+            {% if product.is_low_stock %}
+                <span class="badge bg-warning">Low Stock</span>
+            {% endif %}
+        </div>
+        <div class="mb-4">
+            <h2 style="color: #d7b8ff;">${{ product.price|floatformat:2 }}</h2>
+            <p style="color: rgba(255,255,255,0.6);">Stock: {{ product.stock_quantity }} available</p>
+        </div>
+        
+        {% if product.description %}
+        <div class="mb-4">
+            <h5 style="color: #e8e4f0;">Description</h5>
+            <p style="color: #e8e4f0;">{{ product.description }}</p>
+        </div>
+        {% endif %}
+        
+        {% if product.stock_quantity > 0 %}
+        <form method="post" action="{% url 'add_to_cart' product.pk %}">
+            {% csrf_token %}
+            <div class="row mb-3">
+                <div class="col-md-4">
+                    <label class="form-label">Quantity</label>
+                    <input type="number" name="quantity" class="form-control" value="1" min="1" max="{{ product.stock_quantity }}" required>
+                </div>
+            </div>
+            {% if user.is_authenticated %}
+                <button type="submit" class="btn btn-primary btn-lg">
+                    <i class="fas fa-cart-plus"></i> Add to Cart
+                </button>
+            {% else %}
+                <a href="{% url 'customer_login' %}" class="btn btn-primary btn-lg">
+                    <i class="fas fa-sign-in-alt"></i> Login to Purchase
+                </a>
+            {% endif %}
+        </form>
+        {% else %}
+        <div class="alert alert-warning">
+            <i class="fas fa-exclamation-triangle"></i> This product is currently out of stock.
+        </div>
+        {% endif %}
+        
+        <div class="mt-4">
+            <a href="{% url 'product_catalog' %}" class="btn btn-secondary">
+                <i class="fas fa-arrow-left"></i> Back to Shop
+            </a>
+            {% if user.is_authenticated %}
+                <a href="{% url 'view_cart' %}" class="btn btn-outline-primary">
+                    <i class="fas fa-shopping-cart"></i> View Cart
+                </a>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+{% if related_products %}
+<hr class="my-5" style="border-color: rgba(255,255,255,0.08);">
+<h3 style="color: #e8e4f0;">Related Products</h3>
+<div class="row">
+    {% for related in related_products %}
+    <div class="col-md-3 mb-4">
+        <div class="card">
+            {% if related.image_url %}
+            <img src="{{ related.image_url }}" class="card-img-top" style="height: 150px; object-fit: cover;" alt="{{ related.name }}">
+            {% endif %}
+            <div class="card-body">
+                <h6 class="card-title" style="color: #e8e4f0;">{{ related.name }}</h6>
+                <p style="color: #d7b8ff; font-weight: bold;">${{ related.price|floatformat:2 }}</p>
+                <a href="{% url 'product_detail_customer' related.pk %}" class="btn btn-sm btn-primary">View</a>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% endif %}
+{% endblock %}
+
