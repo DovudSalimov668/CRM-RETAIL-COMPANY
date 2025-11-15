@@ -8,6 +8,7 @@ from datetime import datetime, timedelta
 from django.conf import settings
 import requests
 from .models import OTPCode
+from django.utils import timezone
 
 
 def generate_otp(length=6):
@@ -102,7 +103,7 @@ def create_and_send_otp(email, user=None):
         email=email,
         code=otp_code,
         user=user,
-        expires_at=datetime.now() + timedelta(minutes=10)
+        expires_at=timezone.now() + timedelta(minutes=10)
     )
     
     # Send OTP via Brevo
@@ -124,7 +125,7 @@ def verify_otp(email, code):
             email=email,
             code=code,
             is_used=False,
-            expires_at__gt=datetime.now()
+            expires_at__gt=timezone.now()
         )
         
         # Mark OTP as used
