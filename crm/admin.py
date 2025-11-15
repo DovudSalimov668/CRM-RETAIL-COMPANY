@@ -223,3 +223,19 @@ class CustomerAnalyticsAdmin(admin.ModelAdmin):
     list_filter = ['last_calculated']
     search_fields = ['customer__first_name', 'customer__last_name', 'customer__email']
     readonly_fields = ['last_calculated']
+
+
+from .models import OTPCode
+
+@admin.register(OTPCode)
+class OTPCodeAdmin(admin.ModelAdmin):
+    list_display = ['email', 'code', 'user', 'created_at', 'expires_at', 'is_used', 'is_expired']
+    list_filter = ['is_used', 'created_at', 'expires_at']
+    search_fields = ['email', 'code']
+    readonly_fields = ['created_at', 'expires_at']
+    ordering = ['-created_at']
+    
+    def is_expired(self, obj):
+        return obj.is_expired()
+    is_expired.boolean = True
+    is_expired.short_description = 'Expired'

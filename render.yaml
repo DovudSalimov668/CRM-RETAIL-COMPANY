@@ -1,0 +1,48 @@
+services:
+  - type: web
+    name: retail-crm
+    env: python
+    buildCommand: pip install -r requirements.txt && python manage.py collectstatic --noinput && python manage.py migrate
+    startCommand: gunicorn retail_crm.wsgi:application
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11.0
+      - key: SECRET_KEY
+        sync: false
+      - key: DEBUG
+        value: False
+      - key: ALLOWED_HOSTS
+        sync: false
+      - key: DB_NAME
+        fromDatabase:
+          name: retail-crm-db
+          property: database
+      - key: DB_USER
+        fromDatabase:
+          name: retail-crm-db
+          property: user
+      - key: DB_PASSWORD
+        fromDatabase:
+          name: retail-crm-db
+          property: password
+      - key: DB_HOST
+        fromDatabase:
+          name: retail-crm-db
+          property: host
+      - key: DB_PORT
+        fromDatabase:
+          name: retail-crm-db
+          property: port
+      - key: BREVO_API_KEY
+        sync: false
+      - key: BREVO_SENDER_EMAIL
+        sync: false
+      - key: BREVO_SENDER_NAME
+        value: Retail CRM
+
+databases:
+  - name: retail-crm-db
+    databaseName: retail_crm
+    user: retail_crm_user
+    plan: free
+
