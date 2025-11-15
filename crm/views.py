@@ -907,25 +907,28 @@ def quote_update(request, pk):
 
 
 def staff_login_view(request):
-    """Staff/admin login view with email and OTP"""
+    """Staff/admin login view with email, password, and OTP"""
     if request.user.is_authenticated and request.user.is_staff:
         return redirect('dashboard')
-    
+
     from .otp_service import create_and_send_otp, verify_otp
-    
+
     if request.method == 'POST':
         email = request.POST.get('email', '').strip()
+        password = request.POST.get('password', '').strip()
         otp_code = request.POST.get('otp_code', '').strip()
         action = request.POST.get('action', '')
-        
+
         if action == 'send_otp':
-            # Step 1: Send OTP
             try:
                 user = User.objects.get(email=email)
                 if not user.is_staff:
                     messages.error(request, 'This account does not have staff access. Please use the customer login page.')
                     return redirect('customer_login')
-                
+                user_auth = authenticate(request, username=user.username, password=password)
+                if not user_auth:
+                    messages.error(request, 'Invalid password.')
+                    return render(request, 'crm/staff_login.html', {'email': '', 'msg_type': 'password_error'})
                 otp = create_and_send_otp(email, user)
                 if otp:
                     messages.success(request, 'OTP code has been sent to your email. Please check your inbox.')
@@ -937,14 +940,13 @@ def staff_login_view(request):
                 messages.error(request, 'No account found with this email address.')
             except Exception as e:
                 messages.error(request, f'An error occurred: {str(e)}')
-        
+
         elif action == 'verify_otp':
-            # Step 2: Verify OTP
             email = request.session.get('login_email', '')
             if not email:
                 messages.error(request, 'Please request an OTP first.')
                 return redirect('staff_login')
-            
+
             user = verify_otp(email, otp_code)
             if user:
                 if not user.is_staff:
@@ -952,7 +954,6 @@ def staff_login_view(request):
                     del request.session['login_email']
                     del request.session['login_type']
                     return redirect('customer_login')
-                
                 auth_login(request, user)
                 del request.session['login_email']
                 del request.session['login_type']
@@ -960,7 +961,7 @@ def staff_login_view(request):
                 return redirect('dashboard')
             else:
                 messages.error(request, 'Invalid or expired OTP code. Please try again.')
-    
+
     return render(request, 'crm/staff_login.html', {
         'email': request.session.get('login_email', '')
     })
@@ -1019,28 +1020,31 @@ def customer_register(request):
 
 
 def customer_login_view(request):
-    """Customer login view with email and OTP"""
+    """Customer login view with email, password, and OTP"""
     if request.user.is_authenticated:
         if request.user.is_staff:
             return redirect('dashboard')
         else:
             return redirect('customer_portal')
-    
+
     from .otp_service import create_and_send_otp, verify_otp
-    
+
     if request.method == 'POST':
         email = request.POST.get('email', '').strip()
+        password = request.POST.get('password', '').strip()
         otp_code = request.POST.get('otp_code', '').strip()
         action = request.POST.get('action', '')
-        
+
         if action == 'send_otp':
-            # Step 1: Send OTP
             try:
                 user = User.objects.get(email=email)
                 if user.is_staff:
                     messages.error(request, 'Please use the staff login page to access the admin portal.')
                     return redirect('staff_login')
-                
+                user_auth = authenticate(request, username=user.username, password=password)
+                if not user_auth:
+                    messages.error(request, 'Invalid password.')
+                    return render(request, 'crm/login.html', {'email': '', 'msg_type': 'password_error'})
                 otp = create_and_send_otp(email, user)
                 if otp:
                     messages.success(request, 'OTP code has been sent to your email. Please check your inbox.')
@@ -1052,14 +1056,13 @@ def customer_login_view(request):
                 messages.error(request, 'No account found with this email address.')
             except Exception as e:
                 messages.error(request, f'An error occurred: {str(e)}')
-        
+
         elif action == 'verify_otp':
-            # Step 2: Verify OTP
             email = request.session.get('login_email', '')
             if not email:
                 messages.error(request, 'Please request an OTP first.')
                 return redirect('customer_login')
-            
+
             user = verify_otp(email, otp_code)
             if user:
                 if user.is_staff:
@@ -1067,7 +1070,6 @@ def customer_login_view(request):
                     del request.session['login_email']
                     del request.session['login_type']
                     return redirect('staff_login')
-                
                 auth_login(request, user)
                 del request.session['login_email']
                 del request.session['login_type']
@@ -1075,7 +1077,7 @@ def customer_login_view(request):
                 return redirect('customer_portal')
             else:
                 messages.error(request, 'Invalid or expired OTP code. Please try again.')
-    
+
     return render(request, 'crm/login.html', {
         'email': request.session.get('login_email', '')
     })

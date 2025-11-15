@@ -190,13 +190,11 @@
                 <input type="email" name="email" class="form-control" value="{{ email }}" readonly>
                 <small class="text-muted">OTP sent to this email</small>
             </div>
-            
             <div class="mb-3">
                 <label class="form-label">Enter OTP Code</label>
                 <input type="text" name="otp_code" class="form-control" required placeholder="Enter 6-digit OTP" maxlength="6" pattern="[0-9]{6}" autofocus>
                 <small class="text-muted">Check your email for the 6-digit code</small>
             </div>
-            
             <input type="hidden" name="action" value="verify_otp">
             <div class="d-grid gap-2 mt-4">
                 <button type="submit" class="btn btn-primary btn-lg">
@@ -207,13 +205,19 @@
                 </button>
             </div>
             {% else %}
-            <!-- Step 1: Enter Email -->
+            <!-- Step 1: Enter Email and Password -->
             <div class="mb-3">
                 <label class="form-label">Email Address</label>
                 <input type="email" name="email" class="form-control" required placeholder="Enter your email address" autofocus>
-                <small class="text-muted">We'll send you a one-time password (OTP)</small>
+                <small class="text-muted">Enter your registered email address</small>
             </div>
-            
+            <div class="mb-3 position-relative">
+                <label class="form-label">Password</label>
+                <input type="password" name="password" class="form-control password-input" required placeholder="Enter your password" autocomplete="current-password">
+                <button type="button" class="toggle-password" tabindex="-1" aria-label="Show password">
+                    <i class="fas fa-eye"></i>
+                </button>
+            </div>
             <input type="hidden" name="action" value="send_otp">
             <div class="d-grid gap-2 mt-4">
                 <button type="submit" class="btn btn-primary btn-lg">
