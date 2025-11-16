@@ -3,85 +3,117 @@
 {% block title %}Deals - Retail CRM{% endblock %}
 
 {% block content %}
-<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pb-2 mb-3 border-bottom">
-    <h1 class="h2"><i class="fas fa-handshake"></i> Deals</h1>
-    <a href="{% url 'deal_create' %}" class="btn btn-primary"><i class="fas fa-plus"></i> Add Deal</a>
-</div>
-
-<div class="card mb-4">
-    <div class="card-body">
-        <form method="get" class="row g-3">
-            <div class="col-md-4"><input type="text" name="q" class="form-control" placeholder="Search..." value="{{ query }}"></div>
-            <div class="col-md-3">
-                <select name="stage" class="form-control">
-                    <option value="">All Stages</option>
-                    <option value="lead" {% if stage_filter == 'lead' %}selected{% endif %}>Lead</option>
-                    <option value="qualified" {% if stage_filter == 'qualified' %}selected{% endif %}>Qualified</option>
-                    <option value="proposal" {% if stage_filter == 'proposal' %}selected{% endif %}>Proposal</option>
-                    <option value="negotiation" {% if stage_filter == 'negotiation' %}selected{% endif %}>Negotiation</option>
-                    <option value="closed_won" {% if stage_filter == 'closed_won' %}selected{% endif %}>Closed Won</option>
-                    <option value="closed_lost" {% if stage_filter == 'closed_lost' %}selected{% endif %}>Closed Lost</option>
-                </select>
-            </div>
-            <div class="col-md-3">
-                <select name="assigned_to" class="form-control">
-                    <option value="">All Users</option>
-                    {% for staff in staff_members %}
-                        <option value="{{ staff.id }}" {% if assigned_to_filter == staff.id|stringformat:"s" %}selected{% endif %}>{{ staff.get_full_name|default:staff.username }}</option>
-                    {% endfor %}
-                </select>
-            </div>
-            <div class="col-md-2"><button type="submit" class="btn btn-primary"><i class="fas fa-search"></i></button></div>
-        </form>
+<section class="page-header">
+    <div>
+        <h1 class="mb-1"><i class="fas fa-handshake me-2"></i>Deals</h1>
+        <p>Monitor every opportunity from lead to closed-won with real-time insights.</p>
     </div>
-</div>
+    <div class="page-actions">
+        <a href="{% url 'deal_create' %}" class="btn btn-primary"><i class="fas fa-plus me-1"></i> Add Deal</a>
+    </div>
+</section>
 
-<div class="card">
-    <div class="card-header"><h5 class="mb-0">Deal List</h5></div>
+<section class="filter-card">
+    <form method="get" class="row g-3 align-items-end">
+        <div class="col-md-4">
+            <label class="form-label small text-uppercase">Search</label>
+            <input type="text" name="q" class="form-control" placeholder="Deal title, customer, notes" value="{{ query }}">
+        </div>
+        <div class="col-md-3">
+            <label class="form-label small text-uppercase">Stage</label>
+            <select name="stage" class="form-select">
+                <option value="">All stages</option>
+                <option value="lead" {% if stage_filter == 'lead' %}selected{% endif %}>Lead</option>
+                <option value="qualified" {% if stage_filter == 'qualified' %}selected{% endif %}>Qualified</option>
+                <option value="proposal" {% if stage_filter == 'proposal' %}selected{% endif %}>Proposal</option>
+                <option value="negotiation" {% if stage_filter == 'negotiation' %}selected{% endif %}>Negotiation</option>
+                <option value="closed_won" {% if stage_filter == 'closed_won' %}selected{% endif %}>Closed won</option>
+                <option value="closed_lost" {% if stage_filter == 'closed_lost' %}selected{% endif %}>Closed lost</option>
+            </select>
+        </div>
+        <div class="col-md-3">
+            <label class="form-label small text-uppercase">Owner</label>
+            <select name="assigned_to" class="form-select">
+                <option value="">All users</option>
+                {% for staff in staff_members %}
+                    <option value="{{ staff.id }}" {% if assigned_to_filter == staff.id|stringformat:"s" %}selected{% endif %}>{{ staff.get_full_name|default:staff.username }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="col-md-2">
+            <button type="submit" class="btn btn-primary w-100"><i class="fas fa-search me-1"></i> Filter</button>
+        </div>
+    </form>
+</section>
+
+<section class="card data-card">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <div>
+            <h5 class="mb-1">Pipeline overview</h5>
+            <small class="text-muted">{{ deals.paginator.count }} deals · {{ weighted_deal_value|floatformat:0 }} weighted</small>
+        </div>
+        <span class="chip"><i class="fas fa-bolt text-warning"></i> {{ closed_won }} closed won</span>
+    </div>
     <div class="card-body">
         <div class="table-responsive">
-            <table class="table table-hover">
+            <table class="table table-hover align-middle">
                 <thead>
                     <tr>
-                        <th>Title</th>
+                        <th>Deal</th>
                         <th>Customer</th>
                         <th>Amount</th>
                         <th>Stage</th>
                         <th>Probability</th>
-                        <th>Expected Close</th>
-                        <th>Assigned To</th>
-                        <th>Actions</th>
+                        <th>Expected close</th>
+                        <th>Owner</th>
+                        <th class="text-end">Actions</th>
                     </tr>
                 </thead>
                 <tbody>
                     {% for deal in deals %}
                     <tr>
-                        <td><strong><a href="{% url 'deal_detail' deal.pk %}">{{ deal.title }}</a></strong></td>
+                        <td><a href="{% url 'deal_detail' deal.pk %}" class="fw-semibold">{{ deal.title }}</a></td>
                         <td><a href="{% url 'customer_detail' deal.customer.pk %}">{{ deal.customer.first_name }} {{ deal.customer.last_name }}</a></td>
                         <td>${{ deal.amount|floatformat:2 }}</td>
-                        <td><span class="badge bg-{% if deal.stage == 'closed_won' %}success{% elif deal.stage == 'closed_lost' %}danger{% else %}info{% endif %}">{{ deal.get_stage_display }}</span></td>
+                        <td>
+                            <span class="badge bg-{% if deal.stage == 'closed_won' %}success{% elif deal.stage == 'closed_lost' %}danger{% else %}info text-dark{% endif %}">
+                                {{ deal.get_stage_display }}
+                            </span>
+                        </td>
                         <td>{{ deal.probability }}%</td>
                         <td>{{ deal.expected_close_date|date:"M d, Y" }}</td>
                         <td>{{ deal.assigned_to.get_full_name|default:deal.assigned_to.username|default:"-" }}</td>
-                        <td>
-                            <a href="{% url 'deal_detail' deal.pk %}" class="btn btn-sm btn-primary"><i class="fas fa-eye"></i></a>
-                            <a href="{% url 'deal_update' deal.pk %}" class="btn btn-sm btn-secondary"><i class="fas fa-edit"></i></a>
+                        <td class="text-end">
+                            <a href="{% url 'deal_detail' deal.pk %}" class="btn btn-soft-primary btn-icon" title="View"><i class="fas fa-eye"></i></a>
+                            <a href="{% url 'deal_update' deal.pk %}" class="btn btn-outline-primary btn-icon" title="Edit"><i class="fas fa-edit"></i></a>
                         </td>
                     </tr>
                     {% empty %}
-                    <tr><td colspan="8" class="text-center text-muted">No deals found</td></tr>
+                    <tr>
+                        <td colspan="8" class="empty-state">
+                            <i class="fas fa-handshake-angle"></i>
+                            <p class="mb-0">No deals found</p>
+                        </td>
+                    </tr>
                     {% endfor %}
                 </tbody>
             </table>
         </div>
+
         {% if deals.has_other_pages %}
-        <nav><ul class="pagination justify-content-center">
-            {% if deals.has_previous %}<li class="page-item"><a class="page-link" href="?page={{ deals.previous_page_number }}">Previous</a></li>{% endif %}
-            <li class="page-item active"><span class="page-link">Page {{ deals.number }} of {{ deals.paginator.num_pages }}</span></li>
-            {% if deals.has_next %}<li class="page-item"><a class="page-link" href="?page={{ deals.next_page_number }}">Next</a></li>{% endif %}
-        </ul></nav>
+        <nav class="mt-3">
+            <ul class="pagination justify-content-center">
+                {% if deals.has_previous %}
+                <li class="page-item"><a class="page-link" href="?page={{ deals.previous_page_number }}">Previous</a></li>
+                {% endif %}
+                <li class="page-item active"><span class="page-link">Page {{ deals.number }} of {{ deals.paginator.num_pages }}</span></li>
+                {% if deals.has_next %}
+                <li class="page-item"><a class="page-link" href="?page={{ deals.next_page_number }}">Next</a></li>
+                {% endif %}
+            </ul>
+        </nav>
         {% endif %}
     </div>
-</div>
+</section>
 {% endblock %}
 

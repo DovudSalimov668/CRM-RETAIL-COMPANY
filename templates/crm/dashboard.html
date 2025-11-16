@@ -4,168 +4,219 @@
 {% block title %}Dashboard - Retail CRM{% endblock %}
 
 {% block content %}
+
+
 <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
 
-<div class="d-flex align-items-center mb-3">
-  <div style="margin-right:18px;">
-    {% if request.user.customer_profile.profile_image %}
-      <img src="{{ request.user.customer_profile.profile_image.url }}" alt="Profile Photo" style="height:56px;width:56px;object-fit:cover;border-radius:50%;border:3px solid #5a1a8b;background:#fff;">
-    {% else %}
-      <img src="https://ui-avatars.com/api/?name={{ request.user.get_full_name|urlencode }}&background=5a1a8b&color=fff&size=56" alt="Avatar" style="height:56px;width:56px;object-fit:cover;border-radius:50%;border:3px solid #5a1a8b;background:#fff;">
-    {% endif %}
-  </div>
-  <div>
-    <h4 class="mb-1">Welcome, {{ request.user.get_full_name|default:request.user.username }}</h4>
-    <div class="text-muted">Role: <b>{% if request.user.is_staff %}Staff/Admin{% else %}Customer{% endif %}</b></div>
-  </div>
-</div>
+{% with full_name=request.user.get_full_name|default:request.user.username %}
+<section class="dashboard-hero gradient-card">
+    <div class="hero-copy">
+        <div class="d-flex align-items-center gap-3">
+            {% if customer_profile and customer_profile.profile_image %}
+                <img src="{{ customer_profile.profile_image.url }}" alt="Profile Photo" class="avatar-sm" style="border:3px solid rgba(255,255,255,0.4);">
+            {% else %}
+                <img src="https://ui-avatars.com/api/?name={{ full_name|urlencode }}&background=ffffff&color=5a1a8b&size=64" alt="Profile avatar" class="avatar-sm" style="border:3px solid rgba(255,255,255,0.4);">
+            {% endif %}
+            <div>
+                <p class="mb-1 text-uppercase fw-semibold" style="letter-spacing: 0.15em; color: rgba(255,255,255,0.65);">Today</p>
+                <div class="hero-title">Welcome back, {{ full_name }}.</div>
+                <p class="mb-0">Here’s a quick look at how Retail CRM is performing right now.</p>
+            </div>
+        </div>
 
-<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pb-2 mb-3 border-bottom">
-    <h1 class="h2"><i class="fas fa-chart-line"></i> Dashboard</h1>
-    <div class="btn-toolbar mb-2 mb-md-0">
-        <a href="{% url 'reports' %}" class="btn btn-sm btn-outline-primary">
-            <i class="fas fa-chart-bar"></i> View Reports
-        </a>
-    </div>
-</div>
+        <ul class="hero-metrics">
+            <li><span>Customers</span><strong>{{ total_customers }}</strong></li>
+            <li><span>Pipeline value</span><strong>${{ total_deal_value|floatformat:0 }}</strong></li>
+            <li><span>Monthly revenue</span><strong>${{ this_month_revenue|floatformat:0 }}</strong></li>
+        </ul>
 
-<!-- Statistics Cards -->
-<div class="row mb-4">
-    <div class="col-md-3">
-        <div class="stat-card">
-            <i class="fas fa-users fa-2x mb-2"></i>
-            <h6>Total Customers</h6>
-            <h3>{{ total_customers }}</h3>
-            <small>Active: {{ active_customers }} | VIP: {{ vip_customers }}</small>
+        <div class="hero-actions">
+            <a href="{% url 'reports' %}" class="btn btn-light text-primary">
+                <i class="fas fa-chart-bar"></i> View detailed reports
+            </a>
+            <a href="{% url 'task_list' %}" class="btn btn-outline-light">
+                <i class="fas fa-plus-circle"></i> Manage tasks
+            </a>
         </div>
     </div>
-    <div class="col-md-3">
-        <div class="stat-card" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); color: #fff;">
-            <i class="fas fa-shopping-cart fa-2x mb-2" style="color: #fff;"></i>
-            <h6 style="color: rgba(255,255,255,0.95);">Total Orders</h6>
-            <h3 style="color: #fff;">{{ total_orders }}</h3>
-            <small style="color: rgba(255,255,255,0.85);">Pending: {{ pending_orders }} | Processing: {{ processing_orders }}</small>
+    <div class="balance-card">
+        <small>ARR snapshot</small>
+        <h2>${{ total_revenue|floatformat:0 }}</h2>
+        <p class="mb-3">Gross revenue to date</p>
+        <div class="quick-actions">
+            <span class="quick-chip"><i class="fas fa-bolt"></i>  {{ open_deals }} open deals</span>
+            <span class="quick-chip"><i class="fas fa-check-circle"></i> {{ delivered_orders }} delivered</span>
         </div>
     </div>
-    <div class="col-md-3">
-        <div class="stat-card" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); color: #fff;">
-            <i class="fas fa-dollar-sign fa-2x mb-2" style="color: #fff;"></i>
-            <h6 style="color: rgba(255,255,255,0.95);">Total Revenue</h6>
-            <h3 style="color: #fff;">${{ total_revenue|floatformat:2 }}</h3>
-            <small style="color: rgba(255,255,255,0.85);">This Month: ${{ this_month_revenue|floatformat:2 }}</small>
+</section>
+{% endwith %}
+
+<!-- Metric cards -->
+<section class="row g-4 metrics-row">
+    <div class="col-xxl-3 col-md-6">
+        <div class="stat-card gradient-card">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+                <span class="text-uppercase small fw-semibold">Active customers</span>
+                <i class="fas fa-users"></i>
+            </div>
+            <h3>{{ active_customers }}</h3>
+            <p class="mb-2">VIPs: {{ vip_customers }}</p>
+            <span class="trend positive">
+                <i class="fas fa-arrow-up"></i> +{{ leads }} new leads
+            </span>
         </div>
     </div>
-    <div class="col-md-3">
-        <div class="stat-card" style="background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%); color: #fff;">
-            <i class="fas fa-handshake fa-2x mb-2" style="color: #fff;"></i>
-            <h6 style="color: rgba(255,255,255,0.95);">Deals Pipeline</h6>
-            <h3 style="color: #fff;">{{ open_deals }}</h3>
-            <small style="color: rgba(255,255,255,0.85);">Value: ${{ total_deal_value|floatformat:2 }}</small>
+    <div class="col-xxl-3 col-md-6">
+        <div class="stat-card" style="background: linear-gradient(135deg, #f5576c, #f093fb);">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+                <span class="text-uppercase small fw-semibold">Orders</span>
+                <i class="fas fa-shopping-cart"></i>
+            </div>
+            <h3>{{ total_orders }}</h3>
+            <p class="mb-2">Pending {{ pending_orders }} · Processing {{ processing_orders }}</p>
+            <span class="trend">
+                <i class="fas fa-sync-alt"></i> {{ delivered_orders }} delivered
+            </span>
         </div>
     </div>
-</div>
+    <div class="col-xxl-3 col-md-6">
+        <div class="stat-card" style="background: linear-gradient(135deg, #4facfe, #00f2fe);">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+                <span class="text-uppercase small fw-semibold">Revenue</span>
+                <i class="fas fa-dollar-sign"></i>
+            </div>
+            <h3>${{ total_revenue|floatformat:0 }}</h3>
+            <p class="mb-2">This month ${{ this_month_revenue|floatformat:0 }}</p>
+            <span class="trend positive">
+                <i class="fas fa-arrow-trend-up"></i> ${{
+                    this_month_revenue|floatformat:0|default:"0"
+                }} this month
+            </span>
+        </div>
+    </div>
+    <div class="col-xxl-3 col-md-6">
+        <div class="stat-card" style="background: linear-gradient(135deg, #43e97b, #38f9d7);">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+                <span class="text-uppercase small fw-semibold">Deals pipeline</span>
+                <i class="fas fa-handshake"></i>
+            </div>
+            <h3>{{ open_deals }}</h3>
+            <p class="mb-2">Weighted value ${{ weighted_deal_value|floatformat:0 }}</p>
+            <span class="trend">
+                <i class="fas fa-folder-open"></i> {{ closed_won }} closed won
+            </span>
+        </div>
+    </div>
+</section>
 
 <!-- Charts Row -->
-<div class="row mb-4">
-    <div class="col-md-8">
-        <div class="card">
-            <div class="card-header">
-                <h5 class="mb-0"><i class="fas fa-chart-line"></i> Monthly Revenue</h5>
+<section class="row g-4 my-1">
+    <div class="col-xxl-8">
+        <div class="card data-card h-100">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <div>
+                    <h5 class="mb-1">Monthly revenue trend</h5>
+                    <small class="text-muted">Last 6 months · Updated just now</small>
+                </div>
+                <span class="chip"><i class="fas fa-circle text-success"></i> Live</span>
             </div>
             <div class="card-body">
                 <canvas id="revenueChart" height="80"></canvas>
             </div>
         </div>
     </div>
-    <div class="col-md-4">
-        <div class="card">
-            <div class="card-header">
-                <h5 class="mb-0"><i class="fas fa-chart-pie"></i> Customer Status</h5>
+    <div class="col-xxl-4">
+        <div class="card data-card h-100">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">Customer status mix</h5>
+                <a href="{% url 'customer_list' %}" class="btn btn-sm btn-outline-primary">View all</a>
             </div>
             <div class="card-body">
                 <canvas id="customerStatusChart"></canvas>
             </div>
         </div>
     </div>
-</div>
+</section>
 
-<!-- Recent Activity -->
-<div class="row">
-    <!-- Recent Customers -->
-    <div class="col-md-6">
-        <div class="card">
-            <div class="card-header">
-                <h5 class="mb-0"><i class="fas fa-user-plus"></i> Recent Customers</h5>
+<!-- Activity & tables -->
+<section class="row g-4 mt-1">
+    <div class="col-xl-6">
+        <div class="card data-card h-100">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0"><i class="fas fa-user-plus me-2"></i>Recent customers</h5>
+                <a href="{% url 'customer_list' %}" class="btn btn-sm btn-outline-primary">All customers</a>
             </div>
             <div class="card-body">
                 <div class="table-responsive">
-                    <table class="table table-hover table-sm">
+                    <table class="table align-middle table-hover">
                         <thead>
                             <tr>
                                 <th>Name</th>
                                 <th>Email</th>
                                 <th>Status</th>
-                                <th>Action</th>
+                                <th></th>
                             </tr>
                         </thead>
                         <tbody>
                             {% for customer in recent_customers %}
                             <tr>
-                                <td>
+                                <td class="d-flex align-items-center">
                                     {% if customer.profile_image %}
-                                        <img src="{{ customer.profile_image.url }}" alt="Profile" style="height:32px;width:32px;object-fit:cover;border-radius:50%;background:#222;">
+                                        <img src="{{ customer.profile_image.url }}" alt="{{ customer.get_full_name }}" class="table-avatar">
                                     {% else %}
-                                        <img src="https://ui-avatars.com/api/?name={{ customer.first_name }}+{{ customer.last_name }}&background=5a1a8b&color=fff&size=32" alt="Profile" style="height:32px;width:32px;object-fit:cover;border-radius:50%;background:#222;">
+                                        <img src="https://ui-avatars.com/api/?name={{ customer.first_name }}+{{ customer.last_name }}&background=5a1a8b&color=fff&size=32" alt="{{ customer.get_full_name }}" class="table-avatar">
                                     {% endif %}
+                                    <div>
+                                        <strong>{{ customer.first_name }} {{ customer.last_name }}</strong><br>
+                                        <small class="text-muted">{{ customer.company_name|default:'—' }}</small>
+                                    </div>
                                 </td>
-                                <td>{{ customer.first_name }} {{ customer.last_name }}</td>
                                 <td>{{ customer.email }}</td>
                                 <td>
                                     {% if customer.status == 'active' %}
                                         <span class="badge bg-success">Active</span>
                                     {% elif customer.status == 'vip' %}
-                                        <span class="badge bg-warning">VIP</span>
+                                        <span class="badge bg-warning text-dark">VIP</span>
                                     {% elif customer.status == 'lead' %}
                                         <span class="badge bg-info">Lead</span>
                                     {% else %}
                                         <span class="badge bg-secondary">{{ customer.get_status_display }}</span>
                                     {% endif %}
                                 </td>
-                                <td>
-                                    <a href="{% url 'customer_detail' customer.pk %}" class="btn btn-sm btn-primary">
-                                        <i class="fas fa-eye"></i>
+                                <td class="text-end">
+                                    <a href="{% url 'customer_detail' customer.pk %}" class="btn btn-sm btn-soft-primary">
+                                        Details
                                     </a>
                                 </td>
                             </tr>
                             {% empty %}
                             <tr>
-                                <td colspan="4" class="text-center text-muted">No customers yet</td>
+                                <td colspan="4" class="empty-state">
+                                    <i class="fas fa-user-slash"></i>
+                                    <p class="mb-0">No customers yet</p>
+                                </td>
                             </tr>
                             {% endfor %}
                         </tbody>
                     </table>
                 </div>
-                <div class="text-center mt-3">
-                    <a href="{% url 'customer_list' %}" class="btn btn-outline-primary btn-sm">View All Customers</a>
-                </div>
             </div>
         </div>
     </div>
-
-    <!-- Recent Orders -->
-    <div class="col-md-6">
-        <div class="card">
-            <div class="card-header">
-                <h5 class="mb-0"><i class="fas fa-shopping-bag"></i> Recent Orders</h5>
+    <div class="col-xl-6">
+        <div class="card data-card h-100">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0"><i class="fas fa-shopping-bag me-2"></i>Recent orders</h5>
+                <a href="{% url 'order_list' %}" class="btn btn-sm btn-outline-primary">All orders</a>
             </div>
             <div class="card-body">
                 <div class="table-responsive">
-                    <table class="table table-hover table-sm">
+                    <table class="table align-middle table-hover">
                         <thead>
                             <tr>
-                                <th>Order #</th>
+                                <th>Order</th>
                                 <th>Customer</th>
-                                <th>Amount</th>
+                                <th>Total</th>
                                 <th>Status</th>
                             </tr>
                         </thead>
@@ -177,7 +228,7 @@
                                     {% if order.customer %}
                                         {{ order.customer.first_name }} {{ order.customer.last_name }}
                                     {% else %}
-                                        <span class="text-muted">No Customer</span>
+                                        <span class="text-muted">—</span>
                                     {% endif %}
                                 </td>
                                 <td>${{ order.total_amount|floatformat:2 }}</td>
@@ -185,9 +236,9 @@
                                     {% if order.status == 'delivered' %}
                                         <span class="badge bg-success">Delivered</span>
                                     {% elif order.status == 'processing' %}
-                                        <span class="badge bg-info">Processing</span>
+                                        <span class="badge bg-info text-dark">Processing</span>
                                     {% elif order.status == 'pending' %}
-                                        <span class="badge bg-warning">Pending</span>
+                                        <span class="badge bg-warning text-dark">Pending</span>
                                     {% else %}
                                         <span class="badge bg-secondary">{{ order.get_status_display }}</span>
                                     {% endif %}
@@ -195,66 +246,70 @@
                             </tr>
                             {% empty %}
                             <tr>
-                                <td colspan="4" class="text-center text-muted">No orders yet</td>
+                                <td colspan="4" class="empty-state">
+                                    <i class="fas fa-shopping-cart"></i>
+                                    <p class="mb-0">No orders recorded</p>
+                                </td>
                             </tr>
                             {% endfor %}
                         </tbody>
                     </table>
                 </div>
-                <div class="text-center mt-3">
-                    <a href="{% url 'order_list' %}" class="btn btn-outline-primary btn-sm">View All Orders</a>
-                </div>
             </div>
         </div>
     </div>
-</div>
+</section>
 
-<!-- Upcoming Tasks and Recent Deals -->
-<div class="row mt-4">
-    <div class="col-md-6">
-        <div class="card">
-            <div class="card-header">
-                <h5 class="mb-0"><i class="fas fa-tasks"></i> Upcoming Tasks</h5>
+<!-- Tasks and deals -->
+<section class="row g-4 mt-1">
+    <div class="col-lg-6">
+        <div class="card data-card h-100">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0"><i class="fas fa-clipboard-list me-2"></i>Upcoming tasks</h5>
+                <a href="{% url 'task_list' %}" class="btn btn-sm btn-outline-primary">All tasks</a>
             </div>
             <div class="card-body">
                 {% if upcoming_tasks %}
-                <div class="list-group">
+                <div class="activity-list">
                     {% for task in upcoming_tasks %}
                     <div class="list-group-item">
-                        <div class="d-flex w-100 justify-content-between">
-                            <h6 class="mb-1">{{ task.title }}</h6>
-                            <small>{{ task.due_date|date:"M d" }}</small>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h6 class="mb-1">{{ task.title }}</h6>
+                                <p class="text-muted mb-2">{{ task.description|truncatewords:12 }}</p>
+                                <div class="d-flex align-items-center gap-2 flex-wrap">
+                                    <span class="badge bg-{% if task.priority == 'urgent' %}danger{% elif task.priority == 'high' %}warning text-dark{% else %}info{% endif %}">
+                                        {{ task.get_priority_display }}
+                                    </span>
+                                    {% if task.customer %}
+                                        <small class="text-muted"><i class="fas fa-user"></i> {{ task.customer.first_name }} {{ task.customer.last_name }}</small>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <span class="text-muted small">{{ task.due_date|date:"M d" }}</span>
                         </div>
-                        <p class="mb-1">{{ task.description|truncatewords:10 }}</p>
-                        <small>
-                            <span class="badge bg-{% if task.priority == 'urgent' %}danger{% elif task.priority == 'high' %}warning{% else %}info{% endif %}">
-                                {{ task.get_priority_display }}
-                            </span>
-                            {% if task.customer %}
-                                - {{ task.customer.first_name }} {{ task.customer.last_name }}
-                            {% endif %}
-                        </small>
                     </div>
                     {% endfor %}
                 </div>
                 {% else %}
-                <p class="text-muted text-center">No upcoming tasks</p>
+                    <div class="empty-state">
+                        <i class="fas fa-calendar-check"></i>
+                        <p class="mb-0">No upcoming tasks</p>
+                    </div>
                 {% endif %}
-                <div class="text-center mt-3">
-                    <a href="{% url 'task_list' %}" class="btn btn-outline-primary btn-sm">View All Tasks</a>
-                </div>
             </div>
         </div>
     </div>
-    <div class="col-md-6">
-        <div class="card">
-            <div class="card-header">
-                <h5 class="mb-0"><i class="fas fa-handshake"></i> Recent Deals</h5>
+    <div class="col-lg-6">
+        <div class="card data-card h-100">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0"><i class="fas fa-handshake me-2"></i>Recent deals</h5>
+                <a href="{% url 'deal_list' %}" class="btn btn-sm btn-outline-primary">All deals</a>
             </div>
             <div class="card-body">
                 {% if recent_deals %}
                 <div class="table-responsive">
-                    <table class="table table-hover table-sm">
+                    <table class="table align-middle table-hover">
                         <thead>
                             <tr>
                                 <th>Deal</th>
@@ -280,15 +335,15 @@
                     </table>
                 </div>
                 {% else %}
-                <p class="text-muted text-center">No deals yet</p>
+                    <div class="empty-state">
+                        <i class="fas fa-handshake"></i>
+                        <p class="mb-0">No deals recorded</p>
+                    </div>
                 {% endif %}
-                <div class="text-center mt-3">
-                    <a href="{% url 'deal_list' %}" class="btn btn-outline-primary btn-sm">View All Deals</a>
-                </div>
             </div>
         </div>
     </div>
-</div>
+</section>
 
 <script>
     // Revenue Chart
