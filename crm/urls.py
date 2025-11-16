@@ -4,6 +4,8 @@
 
 from django.urls import path
 from . import views
+from .views import otp_verify_view
+from .views import staff_otp_verify_view
 
 urlpatterns = [
     # Public URLs
@@ -116,5 +118,10 @@ urlpatterns = [
     # Analytics
     path('rfm-analysis/', views.rfm_analysis, name='rfm_analysis'),
     path('cart-abandonment/', views.cart_abandonment_list, name='cart_abandonment_list'),
+]
+    
+urlpatterns += [
+    path('otp-verify/', otp_verify_view, name='otp_verify'),
+    path('staff-otp-verify/', staff_otp_verify_view, name='staff_otp_verify'),
 ]
     

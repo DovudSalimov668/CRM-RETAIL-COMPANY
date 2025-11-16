@@ -9,6 +9,7 @@ from django.conf import settings
 import requests
 from .models import OTPCode
 from django.utils import timezone
+from .email_utils import send_simple_email_async
 
 
 def generate_otp(length=6):
@@ -18,98 +19,21 @@ def generate_otp(length=6):
 
 def send_otp_via_brevo(email, otp_code):
     """
-    Send OTP code via Brevo (formerly Sendinblue) API
+    Send OTP code via Brevo (using async email utility)
     """
-    brevo_api_key = os.getenv('BREVO_API_KEY')
-    brevo_sender_email = os.getenv('BREVO_SENDER_EMAIL', 'noreply@retailcrm.com')
-    brevo_sender_name = os.getenv('BREVO_SENDER_NAME', 'Retail CRM')
-    
-    if not brevo_api_key:
-        print("ERROR: BREVO_API_KEY is not set in environment variables")
-        raise ValueError("BREVO_API_KEY is not set in environment variables")
-    
-    url = "https://api.brevo.com/v3/smtp/email"
-    
-    headers = {
-        "accept": "application/json",
-        "api-key": brevo_api_key,
-        "content-type": "application/json"
-    }
-    
-    payload = {
-        "sender": {
-            "name": brevo_sender_name,
-            "email": brevo_sender_email
-        },
-        "to": [
-            {
-                "email": email,
-                "name": email.split('@')[0]  # Add recipient name
-            }
-        ],
-        "subject": "Your OTP Code for Retail CRM",
-        "htmlContent": f"""
-        <!DOCTYPE html>
-        <html>
-        <head>
-            <style>
-                body {{ font-family: Arial, sans-serif; background-color: #f4f4f4; margin: 0; padding: 0; }}
-                .container {{ max-width: 600px; margin: 30px auto; background: white; padding: 20px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }}
-                .header {{ background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 20px; text-align: center; border-radius: 10px 10px 0 0; }}
-                .otp-box {{ background: linear-gradient(135deg, #5a1a8b 0%, #47136d 100%); 
-                           color: white; padding: 30px; text-align: center; border-radius: 10px; 
-                           margin: 20px 0; }}
-                .otp-code {{ font-size: 36px; font-weight: bold; letter-spacing: 8px; 
-                           margin: 20px 0; font-family: 'Courier New', monospace; }}
-                .footer {{ text-align: center; margin-top: 20px; color: #666; font-size: 12px; }}
-            </style>
-        </head>
-        <body>
-            <div class="container">
-                <div class="header">
-                    <h1>🔐 Retail CRM Login</h1>
-                </div>
-                <h2 style="color: #333;">Your One-Time Password</h2>
-                <p style="color: #666;">Use the following code to complete your login:</p>
-                <div class="otp-box">
-                    <div class="otp-code">{otp_code}</div>
-                </div>
-                <p style="color: #e74c3c; font-weight: bold;">⏰ This code will expire in 10 minutes.</p>
-                <p style="color: #666;">If you didn't request this code, please ignore this email or contact support.</p>
-                <div class="footer">
-                    <p>© 2024 Retail CRM System. All rights reserved.</p>
-                </div>
-            </div>
-        </body>
-        </html>
-        """,
-        "textContent": f"""Your OTP code is: {otp_code}
-
-This code will expire in 10 minutes.
-
-If you didn't request this code, please ignore this email.
-
-- Retail CRM Team"""
-    }
-    
-    try:
-        print(f"Attempting to send OTP to {email}...")
-        response = requests.post(url, json=payload, headers=headers, timeout=10)
-        response.raise_for_status()
-        print(f"✅ OTP sent successfully to {email}. Message ID: {response.json().get('messageId', 'N/A')}")
-        return True
-    except requests.exceptions.Timeout:
-        print(f"❌ Timeout error sending OTP to {email}")
-        return False
-    except requests.exceptions.RequestException as e:
-        print(f"❌ Error sending OTP via Brevo: {e}")
-        if hasattr(e, 'response') and e.response is not None:
-            print(f"Response Status: {e.response.status_code}")
-            print(f"Response Body: {e.response.text}")
-        return False
-    except Exception as e:
-        print(f"❌ Unexpected error: {e}")
-        return False
+    subject = "Your OTP Code for Retail CRM"
+    message = f"""
+        <div>
+            <p>Your One-Time Password (OTP) for Retail CRM is:</p>
+            <div class='otp' style='font-size:2em;letter-spacing:5px;text-align:center;margin:20px 0;padding:15px;background:#f1e6ff;color:#5a1a8b;border-radius:10px;border:2px dashed #5a1a8b;display:inline-block;'>{otp_code}</div>
+            <p>This code will expire in 10 minutes.</p>
+            <p>If you did not request this code, please ignore this email or contact support.</p>
+        </div>
+    """
+    print(f"📧 CRM OTP DEBUG: About to send OTP to {email}: {otp_code}")
+    send_simple_email_async(subject, message, email)
+    print(f"📧 CRM OTP DEBUG: send_simple_email_async call completed for {email}")
+    return True
 
 
 def create_and_send_otp(email, user=None):

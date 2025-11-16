@@ -36,6 +36,7 @@ from .services import (
     calculate_rfm_scores, calculate_customer_analytics, execute_automation_workflow,
     award_loyalty_points, track_cart_abandonment
 )
+from .otp_service import verify_otp, resend_otp
 
 staff_login_required = login_required(login_url='staff_login')
 customer_login_required = login_required(login_url='customer_login')
@@ -1895,3 +1896,68 @@ def cart_abandonment_list(request):
         'abandoned_carts': abandoned_carts,
         'total_value': total_value,
     })
+
+
+def otp_verify_view(request):
+    email = request.GET.get('email') or request.POST.get('email')
+    if not email:
+        messages.error(request, 'No email address provided.')
+        return redirect('customer_login')
+    if request.method == 'POST':
+        action = request.POST.get('action', '')
+        otp_code = request.POST.get('otp_code', '').strip()
+        if action == 'verify_otp':
+            print(f"[OTP VERIFY] Attempting for email={email} code={otp_code}")
+            user = verify_otp(email, otp_code)
+            if user:
+                auth_login(request, user)
+                messages.success(request, f'Welcome back, {user.get_full_name() or user.email}!')
+                return redirect('customer_portal')
+            else:
+                messages.error(request, 'Invalid or expired OTP code. Please try again or resend.')
+        elif action == 'resend_otp':
+            print(f"[OTP VERIFY] Resending OTP for email={email}")
+            try:
+                user = User.objects.get(email=email)
+                resend_result = resend_otp(email, user)
+                if resend_result:
+                    messages.success(request, 'OTP code resent to your email!')
+                else:
+                    messages.error(request, 'Failed to resend OTP. Contact support.')
+            except User.DoesNotExist:
+                messages.error(request, 'No user found to resend OTP to.')
+    return render(request, 'crm/otp_verify.html', {'email': email})
+
+
+def staff_otp_verify_view(request):
+    email = request.GET.get('email') or request.POST.get('email')
+    if not email:
+        messages.error(request, 'No staff email address provided.')
+        return redirect('staff_login')
+    if request.method == 'POST':
+        action = request.POST.get('action', '')
+        otp_code = request.POST.get('otp_code', '').strip()
+        if action == 'verify_otp':
+            print(f"[STAFF OTP VERIFY] Attempt for email={email} code={otp_code}")
+            user = verify_otp(email, otp_code)
+            if user and user.is_staff:
+                auth_login(request, user)
+                messages.success(request, f'Welcome {user.get_full_name() or user.email}!')
+                return redirect('dashboard')
+            else:
+                messages.error(request, 'Invalid or expired OTP code. Please try again or resend.')
+        elif action == 'resend_otp':
+            print(f"[STAFF OTP VERIFY] Resending OTP for email={email}")
+            try:
+                user = User.objects.get(email=email)
+                if not user.is_staff:
+                    messages.error(request, 'That is not a staff account.')
+                    return redirect('customer_login')
+                resend_result = resend_otp(email, user)
+                if resend_result:
+                    messages.success(request, 'OTP code resent to your staff email!')
+                else:
+                    messages.error(request, 'Failed to resend OTP. Contact support.')
+            except User.DoesNotExist:
+                messages.error(request, 'No staff user found to resend OTP to.')
+    return render(request, 'crm/staff_otp_verify.html', {'email': email})
