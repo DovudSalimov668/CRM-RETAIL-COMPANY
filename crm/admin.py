@@ -244,12 +244,16 @@ class OTPCodeAdmin(admin.ModelAdmin):
 
 @admin.register(Employee)
 class EmployeeAdmin(admin.ModelAdmin):
-    list_display = ['employee_id', 'first_name', 'last_name', 'email', 'department', 'role', 'status', 'hire_date']
+    list_display = ['employee_id', 'first_name', 'last_name', 'email', 'department', 'role', 'status', 'hire_date', 'has_user']
     list_filter = ['department', 'role', 'status', 'hire_date']
     search_fields = ['employee_id', 'first_name', 'last_name', 'email', 'position']
     list_editable = ['status']
     date_hierarchy = 'hire_date'
     fieldsets = (
+        ('User Account', {
+            'fields': ('user', 'username', 'password'),
+            'description': 'Option 1: Select existing user. Option 2: Leave user blank and provide username/password to create new user.'
+        }),
         ('Basic Information', {
             'fields': ('employee_id', 'first_name', 'last_name', 'email', 'phone', 'profile_image')
         }),
@@ -257,7 +261,8 @@ class EmployeeAdmin(admin.ModelAdmin):
             'fields': ('department', 'role', 'position', 'status', 'hire_date', 'termination_date')
         }),
         ('Reporting Structure', {
-            'fields': ('manager', 'reports_to')
+            'fields': ('manager', 'reports_to'),
+            'description': 'Select a manager from existing employees. You can create employees first, then assign managers later.'
         }),
         ('Address', {
             'fields': ('address', 'city', 'state', 'country', 'postal_code')
@@ -275,3 +280,87 @@ class EmployeeAdmin(admin.ModelAdmin):
             )
         }),
     )
+    
+    def has_user(self, obj):
+        return "✅ Yes" if obj.user else "❌ No"
+    has_user.short_description = 'Has User'
+    
+    def get_form(self, request, obj=None, **kwargs):
+        from django import forms
+        from .models import Employee
+        from django.contrib.auth import get_user_model
+        User = get_user_model()
+        
+        # Add username and password fields for creating new users
+        if obj is None:  # Creating new employee
+            class EmployeeAdminForm(forms.ModelForm):
+                username = forms.CharField(
+                    required=False,
+                    help_text="Required if creating new user account. Leave blank if linking to existing user."
+                )
+                password = forms.CharField(
+                    required=False,
+                    widget=forms.PasswordInput,
+                    help_text="Required if creating new user account."
+                )
+                
+                class Meta:
+                    model = Employee
+                    fields = '__all__'
+                
+                def __init__(self, *args, **kwargs):
+                    super().__init__(*args, **kwargs)
+                    # Make user field optional when creating
+                    if not self.instance.pk:
+                        self.fields['user'].required = False
+                        self.fields['user'].help_text = "Select existing user or create new one below"
+                    # Filter managers to show all employees
+                    if 'manager' in self.fields:
+                        self.fields['manager'].queryset = Employee.objects.all()
+                
+                def clean(self):
+                    cleaned_data = super().clean()
+                    user = cleaned_data.get('user')
+                    username = cleaned_data.get('username')
+                    password = cleaned_data.get('password')
+                    
+                    # If creating new employee without user
+                    if not self.instance.pk:
+                        if not user and not username:
+                            raise forms.ValidationError("Either select an existing user or provide username to create new user account.")
+                        if username and not password:
+                            raise forms.ValidationError("Password is required when creating new user account.")
+                        if username and User.objects.filter(username=username).exists():
+                            raise forms.ValidationError("A user with this username already exists.")
+                    
+                    return cleaned_data
+                
+                def save(self, commit=True):
+                    employee = super().save(commit=False)
+                    username = self.cleaned_data.get('username')
+                    password = self.cleaned_data.get('password')
+                    
+                    # Create user if username and password provided
+                    if username and password and not employee.user:
+                        user = User.objects.create_user(
+                            username=username,
+                            email=employee.email,
+                            password=password,
+                            first_name=employee.first_name,
+                            last_name=employee.last_name,
+                            is_staff=True,
+                            is_superuser=False
+                        )
+                        employee.user = user
+                    
+                    if commit:
+                        employee.save()
+                    return employee
+            
+            return EmployeeAdminForm
+        else:  # Editing existing employee
+            form = super().get_form(request, obj, **kwargs)
+            # When editing, allow selecting any employee as manager except self
+            if 'manager' in form.base_fields:
+                form.base_fields['manager'].queryset = Employee.objects.exclude(pk=obj.pk)
+            return form

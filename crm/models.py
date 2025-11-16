@@ -720,7 +720,7 @@ class Employee(models.Model):
     ]
     
     # Link to User
-    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='employee_profile')
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='employee_profile', null=True, blank=True)
     
     # Basic Information
     employee_id = models.CharField(max_length=50, unique=True, help_text="Unique employee ID")
@@ -802,8 +802,8 @@ class Employee(models.Model):
                 new_num = 1
             self.employee_id = f"EMP-{new_num:04d}"
         
-        # Set user as staff if employee is created
-        if self.user and not self.user.is_staff:
+        # Set user as staff if employee is created and user exists
+        if hasattr(self, 'user') and self.user and not self.user.is_staff:
             self.user.is_staff = True
             self.user.save()
         
