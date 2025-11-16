@@ -20,3 +20,10 @@ def main():
 
 if __name__ == '__main__':
     main()
+# In Django shell
+
+
+import os
+print("BREVO_API_KEY:", os.getenv('BREVO_API_KEY')[:20] + "..." if os.getenv('BREVO_API_KEY') else "NOT SET")
+print("BREVO_SENDER_EMAIL:", os.getenv('BREVO_SENDER_EMAIL'))
+print("BREVO_SENDER_NAME:", os.getenv('BREVO_SENDER_NAME'))
