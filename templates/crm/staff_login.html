@@ -149,6 +149,38 @@
             color: #dc3545;
             border-color: rgba(220, 53, 69, 0.3);
         }
+        
+        .info-box {
+            background: rgba(90, 26, 139, 0.08);
+            border: 2px dashed var(--border-color);
+            border-radius: 14px;
+            padding: 18px 20px;
+            margin-bottom: 24px;
+        }
+        
+        .info-box .title {
+            font-weight: 600;
+            color: var(--primary-color);
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .info-box .title i {
+            color: var(--primary-color);
+        }
+        
+        .step-list {
+            margin: 0;
+            padding-left: 18px;
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+        }
+        
+        .step-list li + li {
+            margin-top: 4px;
+        }
     </style>
 </head>
 <body>
@@ -171,6 +203,14 @@
             </div>
             {% endfor %}
         {% endif %}
+        <div class="info-box">
+            <p class="title"><i class="fas fa-lock"></i> Secure staff access</p>
+            <ul class="step-list">
+                <li>Authenticate with your staff email and password.</li>
+                <li>We send a 10-minute OTP to your inbox to confirm it's really you.</li>
+                <li>You can request a new OTP every 60 seconds if needed.</li>
+            </ul>
+        </div>
         <form method="post" novalidate id="loginForm">
             {% csrf_token %}
             

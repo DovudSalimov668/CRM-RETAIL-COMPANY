@@ -17,6 +17,11 @@ from dotenv import load_dotenv
 # Load environment variables
 load_dotenv()
 
+# Third-party service credentials
+BREVO_API_KEY = os.getenv('BREVO_API_KEY')
+BREVO_SENDER_EMAIL = os.getenv('BREVO_SENDER_EMAIL', 'ggvpby6996@gmail.com')
+BREVO_SENDER_NAME = os.getenv('BREVO_SENDER_NAME', 'Retail CRM System')
+
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -111,7 +116,7 @@ else:
     DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.postgresql_psycopg2',
-            'NAME': os.getenv('DB_NAME', ),
+            'NAME': os.getenv('DB_NAME', 'retail_crm'),
             'USER': os.getenv('DB_USER', 'postgres'),
             'PASSWORD': os.getenv('DB_PASSWORD', ''),
             'HOST': os.getenv('DB_HOST', 'localhost'),

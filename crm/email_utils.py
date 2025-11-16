@@ -11,8 +11,8 @@ def send_email_via_brevo(subject, html_content, text_content, recipients):
     Send email via Brevo API
     """
     try:
-        # Get API key from settings
-        api_key = getattr(settings, 'BREVO_API_KEY', None)
+        # Get API key from env or settings fallback
+        api_key = os.environ.get('BREVO_API_KEY') or getattr(settings, 'BREVO_API_KEY', None)
         # Debug output
         print(f"🔑 DEBUG: API Key exists: {bool(api_key)}")
         if api_key:

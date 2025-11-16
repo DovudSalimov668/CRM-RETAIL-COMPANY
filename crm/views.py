@@ -4,11 +4,10 @@
 
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required, user_passes_test
-from django.contrib.auth import authenticate
+from django.contrib.auth import authenticate, get_user_model
 from django.contrib.auth import login as auth_login
 from django.contrib.auth import logout as auth_logout
 from django.contrib.auth.forms import AuthenticationForm
-from django.contrib.auth.models import User
 from django.contrib import messages
 from django.db.models import Q, Sum, Count, Avg, Max, Min, F
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
@@ -24,7 +23,8 @@ from .models import (
     Customer, Order, Interaction, Product, OrderItem, Task, Deal, Quote,
     CustomerSegment, CustomerRFM, CommunicationPreference, MarketingCampaign,
     LoyaltyProgram, LoyaltyTransaction, SupportTicket, TicketMessage,
-    CustomerFeedback, AutomationWorkflow, CartAbandonment, CustomerAnalytics
+    CustomerFeedback, AutomationWorkflow, CartAbandonment, CustomerAnalytics,
+    OTPCode
 )
 from .forms import (
     CustomerForm, OrderForm, InteractionForm, CustomerRegistrationForm, 
@@ -36,7 +36,59 @@ from .services import (
     calculate_rfm_scores, calculate_customer_analytics, execute_automation_workflow,
     award_loyalty_points, track_cart_abandonment
 )
-from .otp_service import verify_otp, resend_otp
+from .otp_service import create_and_send_otp, verify_otp, resend_otp
+
+User = get_user_model()
+
+OTP_SEND_COOLDOWN_SECONDS = 60
+MAX_OTP_ATTEMPTS = 5
+
+
+def _get_user_by_email(email: str):
+    """Return the first user matching the email (case-insensitive)."""
+    if not email:
+        return None
+    return User.objects.filter(email__iexact=email.strip()).first()
+
+
+def _otp_attempts_key(login_type: str) -> str:
+    return f'otp_attempts_{login_type or "customer"}'
+
+
+def _reset_otp_attempts(session, login_type: str):
+    session[_otp_attempts_key(login_type)] = 0
+
+
+def _increment_otp_attempts(session, login_type: str) -> int:
+    key = _otp_attempts_key(login_type)
+    attempts = session.get(key, 0) + 1
+    session[key] = attempts
+    return attempts
+
+
+def _clear_login_session(session):
+    session.pop('login_email', None)
+    session.pop('login_type', None)
+    session.pop('otp_attempts_customer', None)
+    session.pop('otp_attempts_staff', None)
+
+
+def _seconds_until_next_otp(email: str) -> int:
+    normalized_email = (email or '').strip().lower()
+    if not normalized_email:
+        return 0
+    latest = OTPCode.objects.filter(email=normalized_email).order_by('-created_at').first()
+    if not latest:
+        return 0
+    elapsed = (timezone.now() - latest.created_at).total_seconds()
+    remaining = OTP_SEND_COOLDOWN_SECONDS - elapsed
+    return int(remaining) if remaining > 0 else 0
+
+
+def _set_login_session(session, email: str, login_type: str):
+    session['login_email'] = (email or '').strip()
+    session['login_type'] = login_type
+    _reset_otp_attempts(session, login_type)
 
 staff_login_required = login_required(login_url='staff_login')
 customer_login_required = login_required(login_url='customer_login')
@@ -912,9 +964,8 @@ def staff_login_view(request):
     if request.user.is_authenticated and request.user.is_staff:
         return redirect('dashboard')
 
-    from .otp_service import create_and_send_otp, verify_otp, resend_otp
-
     if request.method == 'POST':
+        login_type = 'staff'
         email = request.POST.get('email', '').strip()
         password = request.POST.get('password', '').strip()
         otp_code = request.POST.get('otp_code', '').strip()
@@ -924,66 +975,88 @@ def staff_login_view(request):
         if action == 'send_otp':
             print("[STAFF LOGIN] Handling send_otp")
             try:
-                user = User.objects.get(email=email)
+                user = _get_user_by_email(email)
+                if not user:
+                    messages.error(request, 'No account found with this email address.')
+                    return redirect('staff_login')
                 if not user.is_staff:
                     messages.error(request, 'This account does not have staff access. Please use the customer login page.')
                     return redirect('customer_login')
+                wait_time = _seconds_until_next_otp(user.email)
+                if wait_time > 0:
+                    messages.warning(request, f'Please wait {wait_time} seconds before requesting another OTP.')
+                    return redirect('staff_login')
                 user_auth = authenticate(request, username=user.username, password=password)
                 if not user_auth:
                     messages.error(request, 'Invalid password.')
                     return render(request, 'crm/staff_login.html', {'email': '', 'msg_type': 'password_error'})
-                otp = create_and_send_otp(email, user)
+                otp = create_and_send_otp(user.email, user)
                 if otp:
                     messages.success(request, 'OTP code has been sent to your email. Please check your inbox.')
-                    request.session['login_email'] = email
-                    request.session['login_type'] = 'staff'
+                    _set_login_session(request.session, user.email, login_type)
+                    return redirect('staff_otp_verify')
                 else:
                     messages.error(request, 'Failed to send OTP. Please try again or contact support.')
-            except User.DoesNotExist:
-                messages.error(request, 'No account found with this email address.')
             except Exception as e:
                 messages.error(request, f'An error occurred: {str(e)}')
 
         elif action == 'verify_otp':
             print(f"[STAFF LOGIN] Handling verify_otp | email={email} | otp_code={otp_code}")
-            email = request.session.get('login_email', '')
-            if not email:
+            session_email = request.session.get('login_email', '')
+            login_type_session = request.session.get('login_type', login_type)
+            if not session_email:
                 messages.error(request, 'Please request an OTP first.')
                 return redirect('staff_login')
 
-            user = verify_otp(email, otp_code)
+            attempts = request.session.get(_otp_attempts_key(login_type_session), 0)
+            if attempts >= MAX_OTP_ATTEMPTS:
+                messages.error(request, 'Too many invalid OTP attempts. Please request a new code.')
+                _clear_login_session(request.session)
+                return redirect('staff_login')
+
+            user = verify_otp(session_email, otp_code)
             if user:
                 if not user.is_staff:
                     messages.error(request, 'This account does not have staff access.')
-                    del request.session['login_email']
-                    del request.session['login_type']
+                    _clear_login_session(request.session)
                     return redirect('customer_login')
                 auth_login(request, user)
-                del request.session['login_email']
-                del request.session['login_type']
+                _clear_login_session(request.session)
                 messages.success(request, f'Welcome back, {user.get_full_name() or user.email}!')
                 return redirect('dashboard')
             else:
-                messages.error(request, 'Invalid or expired OTP code. Please try again.')
+                attempt_count = _increment_otp_attempts(request.session, login_type_session)
+                remaining = MAX_OTP_ATTEMPTS - attempt_count
+                if remaining > 0:
+                    messages.error(request, f'Invalid or expired OTP code. You have {remaining} attempt(s) remaining.')
+                else:
+                    messages.error(request, 'Too many invalid OTP attempts. Please request a new code.')
+                    _clear_login_session(request.session)
+                    return redirect('staff_login')
 
         if action == 'resend_otp':
             print(f"[STAFF LOGIN] Handling resend_otp for email={email}")
-            email = request.session.get('login_email', '')
-            if not email:
+            session_email = request.session.get('login_email', '')
+            if not session_email:
                 messages.error(request, 'Please request an OTP first.')
                 return redirect('staff_login')
             try:
-                user = User.objects.get(email=email)
+                user = _get_user_by_email(session_email)
+                if not user:
+                    messages.error(request, 'No account found with this email address.')
+                    return redirect('staff_login')
                 if not user.is_staff:
                     messages.error(request, 'This account does not have staff access. Please use the customer login page.')
                     return redirect('customer_login')
-                otp = resend_otp(email, user)
+                wait_time = _seconds_until_next_otp(user.email)
+                if wait_time > 0:
+                    messages.warning(request, f'Please wait {wait_time} seconds before requesting another OTP.')
+                    return redirect('staff_otp_verify')
+                otp = resend_otp(user.email, user)
                 if otp:
                     messages.success(request, 'OTP code has been re-sent to your email.')
                 else:
                     messages.error(request, 'Failed to resend OTP. Please try again or contact support.')
-            except User.DoesNotExist:
-                messages.error(request, 'No account found with this email address.')
             except Exception as e:
                 messages.error(request, f'An error occurred while resending OTP: {str(e)}')
 
@@ -1052,9 +1125,8 @@ def customer_login_view(request):
         else:
             return redirect('customer_portal')
 
-    from .otp_service import create_and_send_otp, verify_otp, resend_otp
-
     if request.method == 'POST':
+        login_type = 'customer'
         email = request.POST.get('email', '').strip()
         password = request.POST.get('password', '').strip()
         otp_code = request.POST.get('otp_code', '').strip()
@@ -1064,66 +1136,88 @@ def customer_login_view(request):
         if action == 'send_otp':
             print("[CUSTOMER LOGIN] Handling send_otp")
             try:
-                user = User.objects.get(email=email)
+                user = _get_user_by_email(email)
+                if not user:
+                    messages.error(request, 'No account found with this email address.')
+                    return redirect('customer_login')
                 if user.is_staff:
                     messages.error(request, 'Please use the staff login page to access the admin portal.')
                     return redirect('staff_login')
+                wait_time = _seconds_until_next_otp(user.email)
+                if wait_time > 0:
+                    messages.warning(request, f'Please wait {wait_time} seconds before requesting another OTP.')
+                    return redirect('customer_login')
                 user_auth = authenticate(request, username=user.username, password=password)
                 if not user_auth:
                     messages.error(request, 'Invalid password.')
                     return render(request, 'crm/login.html', {'email': '', 'msg_type': 'password_error'})
-                otp = create_and_send_otp(email, user)
+                otp = create_and_send_otp(user.email, user)
                 if otp:
                     messages.success(request, 'OTP code has been sent to your email. Please check your inbox.')
-                    request.session['login_email'] = email
-                    request.session['login_type'] = 'customer'
+                    _set_login_session(request.session, user.email, login_type)
+                    return redirect('otp_verify')
                 else:
                     messages.error(request, 'Failed to send OTP. Please try again or contact support.')
-            except User.DoesNotExist:
-                messages.error(request, 'No account found with this email address.')
             except Exception as e:
                 messages.error(request, f'An error occurred: {str(e)}')
 
         elif action == 'verify_otp':
             print(f"[CUSTOMER LOGIN] Handling verify_otp | email={email} | otp_code={otp_code}")
-            email = request.session.get('login_email', '')
-            if not email:
+            session_email = request.session.get('login_email', '')
+            login_type_session = request.session.get('login_type', login_type)
+            if not session_email:
                 messages.error(request, 'Please request an OTP first.')
                 return redirect('customer_login')
 
-            user = verify_otp(email, otp_code)
+            attempts = request.session.get(_otp_attempts_key(login_type_session), 0)
+            if attempts >= MAX_OTP_ATTEMPTS:
+                messages.error(request, 'Too many invalid OTP attempts. Please request a new code.')
+                _clear_login_session(request.session)
+                return redirect('customer_login')
+
+            user = verify_otp(session_email, otp_code)
             if user:
                 if user.is_staff:
                     messages.error(request, 'Please use the staff login page.')
-                    del request.session['login_email']
-                    del request.session['login_type']
+                    _clear_login_session(request.session)
                     return redirect('staff_login')
                 auth_login(request, user)
-                del request.session['login_email']
-                del request.session['login_type']
+                _clear_login_session(request.session)
                 messages.success(request, f'Welcome back, {user.get_full_name() or user.email}!')
                 return redirect('customer_portal')
             else:
-                messages.error(request, 'Invalid or expired OTP code. Please try again.')
+                attempt_count = _increment_otp_attempts(request.session, login_type_session)
+                remaining = MAX_OTP_ATTEMPTS - attempt_count
+                if remaining > 0:
+                    messages.error(request, f'Invalid or expired OTP code. You have {remaining} attempt(s) remaining.')
+                else:
+                    messages.error(request, 'Too many invalid OTP attempts. Please request a new code.')
+                    _clear_login_session(request.session)
+                    return redirect('customer_login')
 
         if action == 'resend_otp':
             print(f"[CUSTOMER LOGIN] Handling resend_otp for email={email}")
-            email = request.session.get('login_email', '')
-            if not email:
+            session_email = request.session.get('login_email', '')
+            if not session_email:
                 messages.error(request, 'Please request an OTP first.')
                 return redirect('customer_login')
             try:
-                user = User.objects.get(email=email)
+                user = _get_user_by_email(session_email)
+                if not user:
+                    messages.error(request, 'No account found with this email address.')
+                    return redirect('customer_login')
                 if user.is_staff:
                     messages.error(request, 'Please use the staff login page to access the admin portal.')
                     return redirect('staff_login')
-                otp = resend_otp(email, user)
+                wait_time = _seconds_until_next_otp(user.email)
+                if wait_time > 0:
+                    messages.warning(request, f'Please wait {wait_time} seconds before requesting another OTP.')
+                    return redirect('otp_verify')
+                otp = resend_otp(user.email, user)
                 if otp:
                     messages.success(request, 'OTP code has been re-sent to your email.')
                 else:
                     messages.error(request, 'Failed to resend OTP. Please try again or contact support.')
-            except User.DoesNotExist:
-                messages.error(request, 'No account found with this email address.')
             except Exception as e:
                 messages.error(request, f'An error occurred while resending OTP: {str(e)}')
 
@@ -1899,7 +1993,9 @@ def cart_abandonment_list(request):
 
 
 def otp_verify_view(request):
-    email = request.GET.get('email') or request.POST.get('email')
+    session_email = request.session.get('login_email')
+    email = (session_email or request.GET.get('email') or request.POST.get('email') or '').strip()
+    login_type = request.session.get('login_type', 'customer')
     if not email:
         messages.error(request, 'No email address provided.')
         return redirect('customer_login')
@@ -1908,29 +2004,55 @@ def otp_verify_view(request):
         otp_code = request.POST.get('otp_code', '').strip()
         if action == 'verify_otp':
             print(f"[OTP VERIFY] Attempting for email={email} code={otp_code}")
+            attempts = request.session.get(_otp_attempts_key(login_type), 0)
+            if attempts >= MAX_OTP_ATTEMPTS:
+                messages.error(request, 'Too many invalid OTP attempts. Please request a new code.')
+                _clear_login_session(request.session)
+                return redirect('customer_login')
             user = verify_otp(email, otp_code)
             if user:
+                if user.is_staff:
+                    messages.error(request, 'Please use the staff login page.')
+                    _clear_login_session(request.session)
+                    return redirect('staff_login')
                 auth_login(request, user)
+                _clear_login_session(request.session)
                 messages.success(request, f'Welcome back, {user.get_full_name() or user.email}!')
                 return redirect('customer_portal')
             else:
-                messages.error(request, 'Invalid or expired OTP code. Please try again or resend.')
+                attempt_count = _increment_otp_attempts(request.session, login_type)
+                remaining = MAX_OTP_ATTEMPTS - attempt_count
+                if remaining > 0:
+                    messages.error(request, f'Invalid or expired OTP code. You have {remaining} attempt(s) remaining.')
+                else:
+                    messages.error(request, 'Too many invalid OTP attempts. Please request a new code.')
+                    _clear_login_session(request.session)
+                    return redirect('customer_login')
         elif action == 'resend_otp':
             print(f"[OTP VERIFY] Resending OTP for email={email}")
             try:
-                user = User.objects.get(email=email)
+                wait_time = _seconds_until_next_otp(email)
+                if wait_time > 0:
+                    messages.warning(request, f'Please wait {wait_time} seconds before requesting another OTP.')
+                    return redirect('otp_verify')
+                user = _get_user_by_email(email)
+                if not user or user.is_staff:
+                    messages.error(request, 'No customer account found for that email.')
+                    return redirect('customer_login')
                 resend_result = resend_otp(email, user)
                 if resend_result:
                     messages.success(request, 'OTP code resent to your email!')
                 else:
                     messages.error(request, 'Failed to resend OTP. Contact support.')
-            except User.DoesNotExist:
-                messages.error(request, 'No user found to resend OTP to.')
+            except Exception as e:
+                messages.error(request, f'Error resending OTP: {str(e)}')
     return render(request, 'crm/otp_verify.html', {'email': email})
 
 
 def staff_otp_verify_view(request):
-    email = request.GET.get('email') or request.POST.get('email')
+    session_email = request.session.get('login_email')
+    email = (session_email or request.GET.get('email') or request.POST.get('email') or '').strip()
+    login_type = request.session.get('login_type', 'staff')
     if not email:
         messages.error(request, 'No staff email address provided.')
         return redirect('staff_login')
@@ -1939,18 +2061,35 @@ def staff_otp_verify_view(request):
         otp_code = request.POST.get('otp_code', '').strip()
         if action == 'verify_otp':
             print(f"[STAFF OTP VERIFY] Attempt for email={email} code={otp_code}")
+            attempts = request.session.get(_otp_attempts_key(login_type), 0)
+            if attempts >= MAX_OTP_ATTEMPTS:
+                messages.error(request, 'Too many invalid OTP attempts. Please request a new code.')
+                _clear_login_session(request.session)
+                return redirect('staff_login')
             user = verify_otp(email, otp_code)
             if user and user.is_staff:
                 auth_login(request, user)
+                _clear_login_session(request.session)
                 messages.success(request, f'Welcome {user.get_full_name() or user.email}!')
                 return redirect('dashboard')
             else:
-                messages.error(request, 'Invalid or expired OTP code. Please try again or resend.')
+                attempt_count = _increment_otp_attempts(request.session, login_type)
+                remaining = MAX_OTP_ATTEMPTS - attempt_count
+                if remaining > 0:
+                    messages.error(request, f'Invalid or expired OTP code. You have {remaining} attempt(s) remaining.')
+                else:
+                    messages.error(request, 'Too many invalid OTP attempts. Please request a new code.')
+                    _clear_login_session(request.session)
+                    return redirect('staff_login')
         elif action == 'resend_otp':
             print(f"[STAFF OTP VERIFY] Resending OTP for email={email}")
             try:
-                user = User.objects.get(email=email)
-                if not user.is_staff:
+                wait_time = _seconds_until_next_otp(email)
+                if wait_time > 0:
+                    messages.warning(request, f'Please wait {wait_time} seconds before requesting another OTP.')
+                    return redirect('staff_otp_verify')
+                user = _get_user_by_email(email)
+                if not user or not user.is_staff:
                     messages.error(request, 'That is not a staff account.')
                     return redirect('customer_login')
                 resend_result = resend_otp(email, user)
@@ -1958,6 +2097,6 @@ def staff_otp_verify_view(request):
                     messages.success(request, 'OTP code resent to your staff email!')
                 else:
                     messages.error(request, 'Failed to resend OTP. Contact support.')
-            except User.DoesNotExist:
-                messages.error(request, 'No staff user found to resend OTP to.')
+            except Exception as e:
+                messages.error(request, f'Error resending OTP: {str(e)}')
     return render(request, 'crm/staff_otp_verify.html', {'email': email})

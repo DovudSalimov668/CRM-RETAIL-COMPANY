@@ -152,6 +152,38 @@
             border-color: rgba(220, 53, 69, 0.3);
         }
         
+        .info-box {
+            background: rgba(90, 26, 139, 0.07);
+            border: 2px dashed var(--border-color);
+            border-radius: 14px;
+            padding: 18px 20px;
+            margin-bottom: 24px;
+        }
+        
+        .info-box .title {
+            font-weight: 600;
+            color: var(--primary-color);
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .info-box .title i {
+            color: var(--primary-color);
+        }
+        
+        .step-list {
+            margin: 0;
+            padding-left: 18px;
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+        }
+        
+        .step-list li + li {
+            margin-top: 4px;
+        }
+        
         hr {
             border-color: var(--border-color) !important;
             opacity: 0.5;
@@ -179,6 +211,15 @@
             </div>
             {% endfor %}
         {% endif %}
+        
+        <div class="info-box">
+            <p class="title"><i class="fas fa-lock"></i> How the secure login works</p>
+            <ul class="step-list">
+                <li>Sign in with your email and password first.</li>
+                <li>We email a one-time code (OTP) instantly — check spam if you don't see it.</li>
+                <li>Codes last 10 minutes and resend is available every 60 seconds.</li>
+            </ul>
+        </div>
         
         <form method="post" novalidate id="loginForm">
             {% csrf_token %}
