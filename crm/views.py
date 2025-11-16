@@ -962,6 +962,26 @@ def staff_login_view(request):
             else:
                 messages.error(request, 'Invalid or expired OTP code. Please try again.')
 
+        if action == 'resend_otp':
+            email = request.session.get('login_email', '')
+            if not email:
+                messages.error(request, 'Please request an OTP first.')
+                return redirect('staff_login')
+            try:
+                user = User.objects.get(email=email)
+                if not user.is_staff:
+                    messages.error(request, 'This account does not have staff access. Please use the customer login page.')
+                    return redirect('customer_login')
+                otp = create_and_send_otp(email, user)
+                if otp:
+                    messages.success(request, 'OTP code has been re-sent to your email.')
+                else:
+                    messages.error(request, 'Failed to resend OTP. Please try again or contact support.')
+            except User.DoesNotExist:
+                messages.error(request, 'No account found with this email address.')
+            except Exception as e:
+                messages.error(request, f'An error occurred while resending OTP: {str(e)}')
+
     return render(request, 'crm/staff_login.html', {
         'email': request.session.get('login_email', '')
     })
@@ -1077,6 +1097,26 @@ def customer_login_view(request):
                 return redirect('customer_portal')
             else:
                 messages.error(request, 'Invalid or expired OTP code. Please try again.')
+
+        if action == 'resend_otp':
+            email = request.session.get('login_email', '')
+            if not email:
+                messages.error(request, 'Please request an OTP first.')
+                return redirect('customer_login')
+            try:
+                user = User.objects.get(email=email)
+                if user.is_staff:
+                    messages.error(request, 'Please use the staff login page to access the admin portal.')
+                    return redirect('staff_login')
+                otp = create_and_send_otp(email, user)
+                if otp:
+                    messages.success(request, 'OTP code has been re-sent to your email.')
+                else:
+                    messages.error(request, 'Failed to resend OTP. Please try again or contact support.')
+            except User.DoesNotExist:
+                messages.error(request, 'No account found with this email address.')
+            except Exception as e:
+                messages.error(request, f'An error occurred while resending OTP: {str(e)}')
 
     return render(request, 'crm/login.html', {
         'email': request.session.get('login_email', '')

@@ -194,6 +194,15 @@
                 <button type="button" class="btn btn-outline-secondary mt-2" onclick="resetForm()">
                     <i class="fas fa-arrow-left"></i> Use Different Email
                 </button>
+                <!-- Resend OTP Button -->
+                <form method="post" style="margin-top: 8px;">
+                    {% csrf_token %}
+                    <input type="hidden" name="email" value="{{ email }}">
+                    <input type="hidden" name="action" value="resend_otp">
+                    <button type="submit" class="btn btn-link" style="padding:0;color:var(--primary-color);text-decoration:underline;font-weight:500;">
+                        <i class="fas fa-redo"></i> Resend OTP
+                    </button>
+                </form>
             </div>
             {% else %}
             <!-- Step 1: Enter Email and Password -->
