@@ -40,6 +40,7 @@ from .otp_service import create_and_send_otp, verify_otp, resend_otp
 
 User = get_user_model()
 
+DEFAULT_AUTH_BACKEND = 'crm.backends.EmailBackend'
 OTP_SEND_COOLDOWN_SECONDS = 60
 MAX_OTP_ATTEMPTS = 5
 
@@ -1020,7 +1021,7 @@ def staff_login_view(request):
                     messages.error(request, 'This account does not have staff access.')
                     _clear_login_session(request.session)
                     return redirect('customer_login')
-                auth_login(request, user)
+                auth_login(request, user, backend=DEFAULT_AUTH_BACKEND)
                 _clear_login_session(request.session)
                 messages.success(request, f'Welcome back, {user.get_full_name() or user.email}!')
                 return redirect('dashboard')
@@ -1181,7 +1182,7 @@ def customer_login_view(request):
                     messages.error(request, 'Please use the staff login page.')
                     _clear_login_session(request.session)
                     return redirect('staff_login')
-                auth_login(request, user)
+                auth_login(request, user, backend=DEFAULT_AUTH_BACKEND)
                 _clear_login_session(request.session)
                 messages.success(request, f'Welcome back, {user.get_full_name() or user.email}!')
                 return redirect('customer_portal')
@@ -2015,7 +2016,7 @@ def otp_verify_view(request):
                     messages.error(request, 'Please use the staff login page.')
                     _clear_login_session(request.session)
                     return redirect('staff_login')
-                auth_login(request, user)
+                auth_login(request, user, backend=DEFAULT_AUTH_BACKEND)
                 _clear_login_session(request.session)
                 messages.success(request, f'Welcome back, {user.get_full_name() or user.email}!')
                 return redirect('customer_portal')
@@ -2068,7 +2069,7 @@ def staff_otp_verify_view(request):
                 return redirect('staff_login')
             user = verify_otp(email, otp_code)
             if user and user.is_staff:
-                auth_login(request, user)
+                auth_login(request, user, backend=DEFAULT_AUTH_BACKEND)
                 _clear_login_session(request.session)
                 messages.success(request, f'Welcome {user.get_full_name() or user.email}!')
                 return redirect('dashboard')
