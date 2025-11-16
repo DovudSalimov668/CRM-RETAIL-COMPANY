@@ -12,11 +12,7 @@
 <section class="dashboard-hero gradient-card">
     <div class="hero-copy">
         <div class="d-flex align-items-center gap-3">
-            {% if customer_profile and customer_profile.profile_image %}
-                <img src="{{ customer_profile.profile_image.url }}" alt="Profile Photo" class="avatar-sm" style="border:3px solid rgba(255,255,255,0.4);">
-            {% else %}
-                <img src="https://ui-avatars.com/api/?name={{ full_name|urlencode }}&background=ffffff&color=5a1a8b&size=64" alt="Profile avatar" class="avatar-sm" style="border:3px solid rgba(255,255,255,0.4);">
-            {% endif %}
+            <img src="https://ui-avatars.com/api/?name={{ full_name|urlencode }}&background=ffffff&color=5a1a8b&size=64" alt="Profile avatar" class="avatar-sm" style="border:3px solid rgba(255,255,255,0.4);">
             <div>
                 <p class="mb-1 text-uppercase fw-semibold" style="letter-spacing: 0.15em; color: rgba(255,255,255,0.65);">Today</p>
                 <div class="hero-title">Welcome back, {{ full_name }}.</div>
@@ -272,7 +268,7 @@
                 {% if upcoming_tasks %}
                 <div class="activity-list">
                     {% for task in upcoming_tasks %}
-                    <div class="list-group-item">
+                    <div class="activity-item">
                         <div class="d-flex justify-content-between align-items-center">
                             <div>
                                 <h6 class="mb-1">{{ task.title }}</h6>
@@ -347,63 +343,94 @@
 
 <script>
     // Revenue Chart
-    const revenueData = {{ monthly_revenue|safe }};
-    const ctx1 = document.getElementById('revenueChart').getContext('2d');
-    new Chart(ctx1, {
-        type: 'line',
-        data: {
-            labels: revenueData.map(item => item.month),
-            datasets: [{
-                label: 'Revenue ($)',
-                data: revenueData.map(item => item.revenue),
-                borderColor: 'rgb(69, 16, 121)',
-                backgroundColor: 'rgba(69, 16, 121, 0.1)',
-                tension: 0.4
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: true,
-            plugins: {
-                legend: {
-                    display: false
+    try {
+        const revenueData = JSON.parse('{{ monthly_revenue|escapejs }}');
+        const ctx1 = document.getElementById('revenueChart');
+        if (ctx1 && revenueData && revenueData.length > 0) {
+            new Chart(ctx1.getContext('2d'), {
+                type: 'line',
+                data: {
+                    labels: revenueData.map(item => item.month || ''),
+                    datasets: [{
+                        label: 'Revenue ($)',
+                        data: revenueData.map(item => parseFloat(item.revenue) || 0),
+                        borderColor: 'rgb(69, 16, 121)',
+                        backgroundColor: 'rgba(69, 16, 121, 0.1)',
+                        tension: 0.4,
+                        fill: true
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                callback: function(value) {
+                                    return '$' + value.toLocaleString();
+                                }
+                            }
+                        }
+                    }
                 }
-            },
-            scales: {
-                y: {
-                    beginAtZero: true
-                }
-            }
+            });
+        } else if (ctx1) {
+            ctx1.parentElement.innerHTML = '<div class="empty-state"><i class="fas fa-chart-line"></i><p class="mb-0">No revenue data available</p></div>';
         }
-    });
+    } catch (e) {
+        console.error('Error rendering revenue chart:', e);
+        const ctx1 = document.getElementById('revenueChart');
+        if (ctx1) {
+            ctx1.parentElement.innerHTML = '<div class="empty-state"><i class="fas fa-exclamation-triangle"></i><p class="mb-0">Unable to load chart data</p></div>';
+        }
+    }
 
     // Customer Status Chart
-    const customerStatusData = {{ customer_status_data|safe }};
-    const ctx2 = document.getElementById('customerStatusChart').getContext('2d');
-    new Chart(ctx2, {
-        type: 'doughnut',
-        data: {
-            labels: customerStatusData.map(item => item.status),
-            datasets: [{
-                data: customerStatusData.map(item => item.count),
-                backgroundColor: [
-                    'rgba(75, 192, 192, 0.8)',
-                    'rgba(255, 99, 132, 0.8)',
-                    'rgba(255, 206, 86, 0.8)',
-                    'rgba(54, 162, 235, 0.8)',
-                    'rgba(153, 102, 255, 0.8)'
-                ]
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: true,
-            plugins: {
-                legend: {
-                    position: 'bottom'
+    try {
+        const customerStatusData = JSON.parse('{{ customer_status_data|escapejs }}');
+        const ctx2 = document.getElementById('customerStatusChart');
+        if (ctx2 && customerStatusData && customerStatusData.length > 0) {
+            new Chart(ctx2.getContext('2d'), {
+                type: 'doughnut',
+                data: {
+                    labels: customerStatusData.map(item => (item.status || 'Unknown').charAt(0).toUpperCase() + (item.status || 'Unknown').slice(1)),
+                    datasets: [{
+                        data: customerStatusData.map(item => parseInt(item.count) || 0),
+                        backgroundColor: [
+                            'rgba(75, 192, 192, 0.8)',
+                            'rgba(255, 99, 132, 0.8)',
+                            'rgba(255, 206, 86, 0.8)',
+                            'rgba(54, 162, 235, 0.8)',
+                            'rgba(153, 102, 255, 0.8)',
+                            'rgba(255, 159, 64, 0.8)'
+                        ]
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    plugins: {
+                        legend: {
+                            position: 'bottom'
+                        }
+                    }
                 }
-            }
+            });
+        } else if (ctx2) {
+            ctx2.parentElement.innerHTML = '<div class="empty-state"><i class="fas fa-chart-pie"></i><p class="mb-0">No customer data available</p></div>';
         }
-    });
+    } catch (e) {
+        console.error('Error rendering customer status chart:', e);
+        const ctx2 = document.getElementById('customerStatusChart');
+        if (ctx2) {
+            ctx2.parentElement.innerHTML = '<div class="empty-state"><i class="fas fa-exclamation-triangle"></i><p class="mb-0">Unable to load chart data</p></div>';
+        }
+    }
 </script>
 {% endblock %}

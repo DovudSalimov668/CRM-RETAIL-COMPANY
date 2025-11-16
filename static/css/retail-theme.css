@@ -315,7 +315,8 @@ a:hover {
     letter-spacing: 0.04em;
 }
 
-.activity-list .list-group-item {
+.activity-list .list-group-item,
+.activity-list .activity-item {
     border-radius: 16px;
     border: 1px solid rgba(0,0,0,0.05);
     margin-bottom: 14px;

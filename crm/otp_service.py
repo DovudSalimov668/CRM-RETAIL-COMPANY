@@ -23,21 +23,136 @@ def generate_otp(length=6):
 
 def send_otp_via_brevo(email, otp_code):
     """
-    Send OTP code via Brevo (using async email utility)
+    Send OTP code via Brevo with improved email template
     """
+    from .email_utils import send_email_via_brevo
+    
     subject = "Your OTP Code for Retail CRM"
-    message = f"""
-        <div>
-            <p>Your One-Time Password (OTP) for Retail CRM is:</p>
-            <div class='otp' style='font-size:2em;letter-spacing:5px;text-align:center;margin:20px 0;padding:15px;background:#f1e6ff;color:#5a1a8b;border-radius:10px;border:2px dashed #5a1a8b;display:inline-block;'>{otp_code}</div>
-            <p>This code will expire in 10 minutes.</p>
-            <p>If you did not request this code, please ignore this email or contact support.</p>
+    
+    # Improved HTML email template with better structure
+    html_message = f"""
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <style>
+            body {{
+                font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+                line-height: 1.6;
+                color: #333333;
+                background-color: #f5f5f5;
+                margin: 0;
+                padding: 0;
+            }}
+            .container {{
+                max-width: 600px;
+                margin: 20px auto;
+                background: #ffffff;
+                border-radius: 8px;
+                overflow: hidden;
+                box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            }}
+            .header {{
+                background: linear-gradient(135deg, #5a1a8b, #47136d);
+                color: #ffffff;
+                padding: 30px 20px;
+                text-align: center;
+            }}
+            .header h1 {{
+                margin: 0;
+                font-size: 24px;
+                font-weight: 600;
+            }}
+            .content {{
+                padding: 30px 20px;
+            }}
+            .otp-box {{
+                background: #f1e6ff;
+                border: 2px dashed #5a1a8b;
+                border-radius: 10px;
+                padding: 20px;
+                text-align: center;
+                margin: 30px 0;
+            }}
+            .otp-code {{
+                font-size: 32px;
+                font-weight: bold;
+                letter-spacing: 8px;
+                color: #5a1a8b;
+                font-family: 'Courier New', monospace;
+                margin: 10px 0;
+            }}
+            .footer {{
+                background: #f9f9f9;
+                padding: 20px;
+                text-align: center;
+                font-size: 12px;
+                color: #666666;
+                border-top: 1px solid #eeeeee;
+            }}
+            .warning {{
+                background: #fff3cd;
+                border-left: 4px solid #ffc107;
+                padding: 12px;
+                margin: 20px 0;
+                border-radius: 4px;
+                font-size: 13px;
+            }}
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <div class="header">
+                <h1>🔐 Retail CRM</h1>
+            </div>
+            <div class="content">
+                <h2 style="color: #5a1a8b; margin-top: 0;">Your One-Time Password</h2>
+                <p>Use this code to complete your login:</p>
+                
+                <div class="otp-box">
+                    <div class="otp-code">{otp_code}</div>
+                </div>
+                
+                <p style="margin-bottom: 0;"><strong>This code will expire in 10 minutes.</strong></p>
+                
+                <div class="warning">
+                    <strong>⚠️ Security Notice:</strong> If you did not request this code, please ignore this email or contact support immediately.
+                </div>
+            </div>
+            <div class="footer">
+                <p>This is an automated message from Retail CRM System</p>
+                <p style="margin: 5px 0 0 0;">Please do not reply to this email</p>
+            </div>
         </div>
+    </body>
+    </html>
     """
+    
+    text_message = f"""
+Retail CRM - Your One-Time Password
+
+Your OTP code is: {otp_code}
+
+This code will expire in 10 minutes.
+
+If you did not request this code, please ignore this email or contact support immediately.
+
+---
+This is an automated message from Retail CRM System
+    """
+    
     print(f"📧 CRM OTP DEBUG: About to send OTP to {email}: {otp_code}")
-    send_simple_email_async(subject, message, email)
-    print(f"📧 CRM OTP DEBUG: send_simple_email_async call completed for {email}")
-    return True
+    
+    # Use synchronous sending for OTP so we can verify it worked
+    result = send_email_via_brevo(subject, html_message, text_message, [email])
+    
+    if result:
+        print(f"✅ CRM OTP DEBUG: OTP email sent successfully to {email}")
+    else:
+        print(f"❌ CRM OTP DEBUG: Failed to send OTP email to {email}")
+    
+    return result
 
 
 def create_and_send_otp(email, user=None):
