@@ -686,3 +686,125 @@ class OTPCode(models.Model):
     
     def is_expired(self):
         return timezone.now() > self.expires_at
+
+
+class Employee(models.Model):
+    """
+    Employee model - for staff members who are not admins
+    Employees have limited access compared to superusers
+    """
+    
+    DEPARTMENT_CHOICES = [
+        ('sales', 'Sales'),
+        ('support', 'Customer Support'),
+        ('marketing', 'Marketing'),
+        ('operations', 'Operations'),
+        ('finance', 'Finance'),
+        ('hr', 'Human Resources'),
+        ('it', 'IT'),
+        ('other', 'Other'),
+    ]
+    
+    ROLE_CHOICES = [
+        ('manager', 'Manager'),
+        ('senior', 'Senior Employee'),
+        ('employee', 'Employee'),
+        ('intern', 'Intern'),
+    ]
+    
+    STATUS_CHOICES = [
+        ('active', 'Active'),
+        ('inactive', 'Inactive'),
+        ('on_leave', 'On Leave'),
+        ('terminated', 'Terminated'),
+    ]
+    
+    # Link to User
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='employee_profile')
+    
+    # Basic Information
+    employee_id = models.CharField(max_length=50, unique=True, help_text="Unique employee ID")
+    first_name = models.CharField(max_length=100)
+    last_name = models.CharField(max_length=100)
+    email = models.EmailField(unique=True)
+    phone = models.CharField(max_length=20, blank=True)
+    
+    # Employment Details
+    department = models.CharField(max_length=50, choices=DEPARTMENT_CHOICES, default='other')
+    role = models.CharField(max_length=50, choices=ROLE_CHOICES, default='employee')
+    position = models.CharField(max_length=200, blank=True, help_text="Job title/position")
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='active')
+    
+    # Employment Dates
+    hire_date = models.DateField(default=timezone.now)
+    termination_date = models.DateField(null=True, blank=True)
+    
+    # Manager/Reporting
+    manager = models.ForeignKey('self', on_delete=models.SET_NULL, null=True, blank=True, related_name='subordinates')
+    reports_to = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='team_members')
+    
+    # Address
+    address = models.TextField(blank=True)
+    city = models.CharField(max_length=100, blank=True)
+    state = models.CharField(max_length=100, blank=True)
+    country = models.CharField(max_length=100, blank=True)
+    postal_code = models.CharField(max_length=20, blank=True)
+    
+    # Additional Info
+    bio = models.TextField(blank=True, help_text="Employee bio/description")
+    notes = models.TextField(blank=True, help_text="Internal notes")
+    
+    # Media
+    profile_image = models.ImageField(upload_to='employees/', null=True, blank=True)
+    
+    # Permissions (what employees can access)
+    can_view_customers = models.BooleanField(default=True)
+    can_edit_customers = models.BooleanField(default=False)
+    can_view_orders = models.BooleanField(default=True)
+    can_edit_orders = models.BooleanField(default=False)
+    can_view_products = models.BooleanField(default=True)
+    can_edit_products = models.BooleanField(default=False)
+    can_view_reports = models.BooleanField(default=False)
+    can_manage_tasks = models.BooleanField(default=True)
+    can_manage_tickets = models.BooleanField(default=True)
+    can_view_analytics = models.BooleanField(default=False)
+    
+    # Metadata
+    created_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, related_name='employees_created')
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        ordering = ['-hire_date']
+        verbose_name_plural = 'Employees'
+    
+    def __str__(self):
+        return f"{self.first_name} {self.last_name} ({self.employee_id})"
+    
+    def get_full_name(self):
+        return f"{self.first_name} {self.last_name}"
+    
+    def is_active(self):
+        return self.status == 'active'
+    
+    def save(self, *args, **kwargs):
+        # Auto-generate employee_id if not provided
+        if not self.employee_id:
+            # Generate unique employee ID
+            last_employee = Employee.objects.order_by('-id').first()
+            if last_employee and last_employee.employee_id:
+                try:
+                    last_num = int(last_employee.employee_id.split('-')[-1])
+                    new_num = last_num + 1
+                except:
+                    new_num = 1
+            else:
+                new_num = 1
+            self.employee_id = f"EMP-{new_num:04d}"
+        
+        # Set user as staff if employee is created
+        if self.user and not self.user.is_staff:
+            self.user.is_staff = True
+            self.user.save()
+        
+        super().save(*args, **kwargs)

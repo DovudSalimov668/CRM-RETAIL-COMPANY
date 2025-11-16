@@ -1,0 +1,236 @@
+{% extends 'crm/base.html' %}
+{% block title %}{{ action }} Employee - Retail CRM{% endblock %}
+{% block content %}
+<section class="page-header">
+    <div>
+        <h1 class="mb-1"><i class="fas fa-user-tie me-2"></i>{{ action }} Employee</h1>
+        <p>{% if action == 'Create' %}Add a new employee to the system{% else %}Update employee information{% endif %}</p>
+    </div>
+    <div class="page-actions">
+        <a href="{% url 'employee_list' %}" class="btn btn-outline-secondary">
+            <i class="fas fa-arrow-left me-1"></i> Back to List
+        </a>
+    </div>
+</section>
+
+<section class="data-card">
+    <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        
+        <div class="row mb-4">
+            <div class="col-12">
+                <h5 class="mb-3"><i class="fas fa-user me-2"></i>Basic Information</h5>
+            </div>
+            <div class="col-md-6 mb-3">
+                <label class="form-label">Username *</label>
+                {{ form.username }}
+                {% if form.username.errors %}<div class="text-danger small">{{ form.username.errors }}</div>{% endif %}
+            </div>
+            <div class="col-md-6 mb-3">
+                <label class="form-label">Email *</label>
+                {{ form.email }}
+                {% if form.email.errors %}<div class="text-danger small">{{ form.email.errors }}</div>{% endif %}
+            </div>
+            <div class="col-md-6 mb-3">
+                <label class="form-label">First Name *</label>
+                {{ form.first_name }}
+                {% if form.first_name.errors %}<div class="text-danger small">{{ form.first_name.errors }}</div>{% endif %}
+            </div>
+            <div class="col-md-6 mb-3">
+                <label class="form-label">Last Name *</label>
+                {{ form.last_name }}
+                {% if form.last_name.errors %}<div class="text-danger small">{{ form.last_name.errors }}</div>{% endif %}
+            </div>
+            <div class="col-md-6 mb-3">
+                <label class="form-label">Phone</label>
+                {{ form.phone }}
+            </div>
+            <div class="col-md-6 mb-3">
+                <label class="form-label">Employee ID</label>
+                {{ form.employee_id }}
+                <small class="text-muted">Leave blank to auto-generate</small>
+            </div>
+            <div class="col-md-12 mb-3">
+                <label class="form-label">Profile Image</label>
+                {{ form.profile_image }}
+            </div>
+        </div>
+        
+        <div class="row mb-4">
+            <div class="col-12">
+                <h5 class="mb-3"><i class="fas fa-briefcase me-2"></i>Employment Details</h5>
+            </div>
+            <div class="col-md-4 mb-3">
+                <label class="form-label">Department *</label>
+                {{ form.department }}
+            </div>
+            <div class="col-md-4 mb-3">
+                <label class="form-label">Role *</label>
+                {{ form.role }}
+            </div>
+            <div class="col-md-4 mb-3">
+                <label class="form-label">Status *</label>
+                {{ form.status }}
+            </div>
+            <div class="col-md-6 mb-3">
+                <label class="form-label">Position/Job Title</label>
+                {{ form.position }}
+            </div>
+            <div class="col-md-6 mb-3">
+                <label class="form-label">Hire Date *</label>
+                {{ form.hire_date }}
+            </div>
+            <div class="col-md-6 mb-3">
+                <label class="form-label">Manager</label>
+                {{ form.manager }}
+            </div>
+            <div class="col-md-6 mb-3">
+                <label class="form-label">Reports To</label>
+                {{ form.reports_to }}
+            </div>
+        </div>
+        
+        <div class="row mb-4">
+            <div class="col-12">
+                <h5 class="mb-3"><i class="fas fa-map-marker-alt me-2"></i>Address</h5>
+            </div>
+            <div class="col-md-12 mb-3">
+                <label class="form-label">Address</label>
+                {{ form.address }}
+            </div>
+            <div class="col-md-4 mb-3">
+                <label class="form-label">City</label>
+                {{ form.city }}
+            </div>
+            <div class="col-md-4 mb-3">
+                <label class="form-label">State</label>
+                {{ form.state }}
+            </div>
+            <div class="col-md-4 mb-3">
+                <label class="form-label">Country</label>
+                {{ form.country }}
+            </div>
+            <div class="col-md-6 mb-3">
+                <label class="form-label">Postal Code</label>
+                {{ form.postal_code }}
+            </div>
+        </div>
+        
+        <div class="row mb-4">
+            <div class="col-12">
+                <h5 class="mb-3"><i class="fas fa-key me-2"></i>Permissions</h5>
+                <p class="text-muted small">Control what this employee can access and modify</p>
+            </div>
+            <div class="col-md-6 mb-3">
+                <div class="form-check">
+                    {{ form.can_view_customers }}
+                    <label class="form-check-label" for="{{ form.can_view_customers.id_for_label }}">
+                        View Customers
+                    </label>
+                </div>
+            </div>
+            <div class="col-md-6 mb-3">
+                <div class="form-check">
+                    {{ form.can_edit_customers }}
+                    <label class="form-check-label" for="{{ form.can_edit_customers.id_for_label }}">
+                        Edit Customers
+                    </label>
+                </div>
+            </div>
+            <div class="col-md-6 mb-3">
+                <div class="form-check">
+                    {{ form.can_view_orders }}
+                    <label class="form-check-label" for="{{ form.can_view_orders.id_for_label }}">
+                        View Orders
+                    </label>
+                </div>
+            </div>
+            <div class="col-md-6 mb-3">
+                <div class="form-check">
+                    {{ form.can_edit_orders }}
+                    <label class="form-check-label" for="{{ form.can_edit_orders.id_for_label }}">
+                        Edit Orders
+                    </label>
+                </div>
+            </div>
+            <div class="col-md-6 mb-3">
+                <div class="form-check">
+                    {{ form.can_view_products }}
+                    <label class="form-check-label" for="{{ form.can_view_products.id_for_label }}">
+                        View Products
+                    </label>
+                </div>
+            </div>
+            <div class="col-md-6 mb-3">
+                <div class="form-check">
+                    {{ form.can_edit_products }}
+                    <label class="form-check-label" for="{{ form.can_edit_products.id_for_label }}">
+                        Edit Products
+                    </label>
+                </div>
+            </div>
+            <div class="col-md-6 mb-3">
+                <div class="form-check">
+                    {{ form.can_view_reports }}
+                    <label class="form-check-label" for="{{ form.can_view_reports.id_for_label }}">
+                        View Reports
+                    </label>
+                </div>
+            </div>
+            <div class="col-md-6 mb-3">
+                <div class="form-check">
+                    {{ form.can_manage_tasks }}
+                    <label class="form-check-label" for="{{ form.can_manage_tasks.id_for_label }}">
+                        Manage Tasks
+                    </label>
+                </div>
+            </div>
+            <div class="col-md-6 mb-3">
+                <div class="form-check">
+                    {{ form.can_manage_tickets }}
+                    <label class="form-check-label" for="{{ form.can_manage_tickets.id_for_label }}">
+                        Manage Tickets
+                    </label>
+                </div>
+            </div>
+            <div class="col-md-6 mb-3">
+                <div class="form-check">
+                    {{ form.can_view_analytics }}
+                    <label class="form-check-label" for="{{ form.can_view_analytics.id_for_label }}">
+                        View Analytics
+                    </label>
+                </div>
+            </div>
+        </div>
+        
+        <div class="row mb-4">
+            <div class="col-12">
+                <h5 class="mb-3"><i class="fas fa-info-circle me-2"></i>Additional Information</h5>
+            </div>
+            <div class="col-md-12 mb-3">
+                <label class="form-label">Bio</label>
+                {{ form.bio }}
+            </div>
+            <div class="col-md-12 mb-3">
+                <label class="form-label">Internal Notes</label>
+                {{ form.notes }}
+            </div>
+            {% if action == 'Update' %}
+            <div class="col-md-12 mb-3">
+                <label class="form-label">Password</label>
+                {{ form.password }}
+                <small class="text-muted">Leave blank to keep existing password</small>
+            </div>
+            {% endif %}
+        </div>
+        
+        <div class="d-flex justify-content-end gap-2">
+            <a href="{% url 'employee_list' %}" class="btn btn-outline-secondary">Cancel</a>
+            <button type="submit" class="btn btn-primary">
+                <i class="fas fa-save me-1"></i> {{ action }} Employee
+            </button>
+        </div>
+    </form>
+</section>
+{% endblock %}
+

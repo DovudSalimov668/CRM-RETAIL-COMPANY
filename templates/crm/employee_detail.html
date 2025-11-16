@@ -1,0 +1,196 @@
+{% extends 'crm/base.html' %}
+{% block title %}{{ employee.get_full_name }} - Employee Details{% endblock %}
+{% block content %}
+<section class="page-header">
+    <div>
+        <h1 class="mb-1"><i class="fas fa-user-tie me-2"></i>{{ employee.get_full_name }}</h1>
+        <p>{{ employee.position|default:"Employee" }} - {{ employee.get_department_display }}</p>
+    </div>
+    <div class="page-actions">
+        <a href="{% url 'employee_list' %}" class="btn btn-outline-secondary">
+            <i class="fas fa-arrow-left me-1"></i> Back to List
+        </a>
+        <a href="{% url 'employee_update' employee.pk %}" class="btn btn-primary">
+            <i class="fas fa-edit me-1"></i> Edit Employee
+        </a>
+    </div>
+</section>
+
+<div class="row">
+    <div class="col-md-4 mb-4">
+        <section class="data-card">
+            <div class="text-center mb-4">
+                {% if employee.profile_image %}
+                <img src="{{ employee.profile_image.url }}" alt="{{ employee.get_full_name }}" class="avatar-md mb-3" onerror="this.src='https://ui-avatars.com/api/?name={{ employee.get_full_name|urlencode }}&background=5a1a8b&color=fff&size=200'">
+                {% else %}
+                <img src="https://ui-avatars.com/api/?name={{ employee.get_full_name|urlencode }}&background=5a1a8b&color=fff&size=200" alt="{{ employee.get_full_name }}" class="avatar-md mb-3">
+                {% endif %}
+                <h4>{{ employee.get_full_name }}</h4>
+                <p class="text-muted mb-2">{{ employee.position|default:"Employee" }}</p>
+                <p class="text-muted small mb-3">{{ employee.get_department_display }}</p>
+                {% if employee.status == 'active' %}
+                <span class="badge bg-success">Active</span>
+                {% elif employee.status == 'inactive' %}
+                <span class="badge bg-secondary">Inactive</span>
+                {% elif employee.status == 'on_leave' %}
+                <span class="badge bg-warning">On Leave</span>
+                {% else %}
+                <span class="badge bg-danger">Terminated</span>
+                {% endif %}
+            </div>
+            
+            <hr>
+            
+            <div class="mb-3">
+                <strong><i class="fas fa-id-badge me-2"></i>Employee ID:</strong>
+                <div class="mt-1">{{ employee.employee_id }}</div>
+            </div>
+            
+            <div class="mb-3">
+                <strong><i class="fas fa-envelope me-2"></i>Email:</strong>
+                <div class="mt-1"><a href="mailto:{{ employee.email }}">{{ employee.email }}</a></div>
+            </div>
+            
+            {% if employee.phone %}
+            <div class="mb-3">
+                <strong><i class="fas fa-phone me-2"></i>Phone:</strong>
+                <div class="mt-1"><a href="tel:{{ employee.phone }}">{{ employee.phone }}</a></div>
+            </div>
+            {% endif %}
+            
+            <div class="mb-3">
+                <strong><i class="fas fa-calendar me-2"></i>Hire Date:</strong>
+                <div class="mt-1">{{ employee.hire_date|date:"F d, Y" }}</div>
+            </div>
+            
+            {% if employee.manager %}
+            <div class="mb-3">
+                <strong><i class="fas fa-user-tie me-2"></i>Manager:</strong>
+                <div class="mt-1"><a href="{% url 'employee_detail' employee.manager.pk %}">{{ employee.manager.get_full_name }}</a></div>
+            </div>
+            {% endif %}
+        </section>
+    </div>
+    
+    <div class="col-md-8">
+        <section class="data-card mb-4">
+            <h5 class="mb-3"><i class="fas fa-info-circle me-2"></i>Employment Information</h5>
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <strong>Department:</strong>
+                    <div>{{ employee.get_department_display }}</div>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <strong>Role:</strong>
+                    <div>{{ employee.get_role_display }}</div>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <strong>Status:</strong>
+                    <div>
+                        {% if employee.status == 'active' %}
+                        <span class="badge bg-success">Active</span>
+                        {% elif employee.status == 'inactive' %}
+                        <span class="badge bg-secondary">Inactive</span>
+                        {% elif employee.status == 'on_leave' %}
+                        <span class="badge bg-warning">On Leave</span>
+                        {% else %}
+                        <span class="badge bg-danger">Terminated</span>
+                        {% endif %}
+                    </div>
+                </div>
+                {% if employee.termination_date %}
+                <div class="col-md-6 mb-3">
+                    <strong>Termination Date:</strong>
+                    <div>{{ employee.termination_date|date:"F d, Y" }}</div>
+                </div>
+                {% endif %}
+            </div>
+            
+            {% if employee.bio %}
+            <hr>
+            <div>
+                <strong>Bio:</strong>
+                <div class="mt-2">{{ employee.bio|linebreaks }}</div>
+            </div>
+            {% endif %}
+        </section>
+        
+        <section class="data-card mb-4">
+            <h5 class="mb-3"><i class="fas fa-key me-2"></i>Permissions</h5>
+            <div class="row">
+                <div class="col-md-6">
+                    <ul class="list-unstyled">
+                        <li><i class="fas fa-{% if employee.can_view_customers %}check text-success{% else %}times text-danger{% endif %} me-2"></i>View Customers</li>
+                        <li><i class="fas fa-{% if employee.can_edit_customers %}check text-success{% else %}times text-danger{% endif %} me-2"></i>Edit Customers</li>
+                        <li><i class="fas fa-{% if employee.can_view_orders %}check text-success{% else %}times text-danger{% endif %} me-2"></i>View Orders</li>
+                        <li><i class="fas fa-{% if employee.can_edit_orders %}check text-success{% else %}times text-danger{% endif %} me-2"></i>Edit Orders</li>
+                        <li><i class="fas fa-{% if employee.can_view_products %}check text-success{% else %}times text-danger{% endif %} me-2"></i>View Products</li>
+                    </ul>
+                </div>
+                <div class="col-md-6">
+                    <ul class="list-unstyled">
+                        <li><i class="fas fa-{% if employee.can_edit_products %}check text-success{% else %}times text-danger{% endif %} me-2"></i>Edit Products</li>
+                        <li><i class="fas fa-{% if employee.can_view_reports %}check text-success{% else %}times text-danger{% endif %} me-2"></i>View Reports</li>
+                        <li><i class="fas fa-{% if employee.can_manage_tasks %}check text-success{% else %}times text-danger{% endif %} me-2"></i>Manage Tasks</li>
+                        <li><i class="fas fa-{% if employee.can_manage_tickets %}check text-success{% else %}times text-danger{% endif %} me-2"></i>Manage Tickets</li>
+                        <li><i class="fas fa-{% if employee.can_view_analytics %}check text-success{% else %}times text-danger{% endif %} me-2"></i>View Analytics</li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+        
+        {% if tasks %}
+        <section class="data-card mb-4">
+            <h5 class="mb-3"><i class="fas fa-tasks me-2"></i>Recent Tasks</h5>
+            <div class="table-responsive">
+                <table class="table table-sm">
+                    <thead>
+                        <tr>
+                            <th>Task</th>
+                            <th>Status</th>
+                            <th>Due Date</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for task in tasks %}
+                        <tr>
+                            <td><a href="{% url 'task_update' task.pk %}">{{ task.title }}</a></td>
+                            <td><span class="badge bg-info">{{ task.get_status_display }}</span></td>
+                            <td>{{ task.due_date|date:"M d, Y" }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </section>
+        {% endif %}
+        
+        {% if tickets %}
+        <section class="data-card">
+            <h5 class="mb-3"><i class="fas fa-ticket-alt me-2"></i>Recent Tickets</h5>
+            <div class="table-responsive">
+                <table class="table table-sm">
+                    <thead>
+                        <tr>
+                            <th>Ticket</th>
+                            <th>Status</th>
+                            <th>Priority</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for ticket in tickets %}
+                        <tr>
+                            <td><a href="{% url 'ticket_detail' ticket.pk %}">{{ ticket.ticket_number }} - {{ ticket.subject }}</a></td>
+                            <td><span class="badge bg-info">{{ ticket.get_status_display }}</span></td>
+                            <td><span class="badge bg-warning">{{ ticket.get_priority_display }}</span></td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </section>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+

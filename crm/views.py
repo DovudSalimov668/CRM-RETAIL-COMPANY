@@ -24,11 +24,11 @@ from .models import (
     CustomerSegment, CustomerRFM, CommunicationPreference, MarketingCampaign,
     LoyaltyProgram, LoyaltyTransaction, SupportTicket, TicketMessage,
     CustomerFeedback, AutomationWorkflow, CartAbandonment, CustomerAnalytics,
-    OTPCode
+    OTPCode, Employee
 )
 from .forms import (
     CustomerForm, OrderForm, InteractionForm, CustomerRegistrationForm, 
-    StaffRegistrationForm, TaskForm, DealForm, QuoteForm, ProductForm,
+    StaffRegistrationForm, EmployeeForm, TaskForm, DealForm, QuoteForm, ProductForm,
     CustomerSegmentForm, MarketingCampaignForm, SupportTicketForm, TicketMessageForm,
     CustomerFeedbackForm, AutomationWorkflowForm, CommunicationPreferenceForm
 )
@@ -128,6 +128,11 @@ def dashboard(request):
         except Customer.DoesNotExist:
             messages.error(request, 'Customer profile not found.')
             return redirect('customer_login')
+    
+    # Check if user is an employee (not superuser)
+    employee = _get_employee_profile(request.user)
+    if employee and not request.user.is_superuser:
+        return redirect('employee_dashboard')
     
     # Basic Statistics
     total_customers = Customer.objects.count()
@@ -1283,6 +1288,201 @@ def staff_register(request):
         form = StaffRegistrationForm()
     
     return render(request, 'crm/staff_register.html', {'form': form})
+
+
+# ============================================
+# EMPLOYEE MANAGEMENT VIEWS
+# ============================================
+
+def _get_employee_profile(user):
+    """Helper to get employee profile if exists"""
+    try:
+        return user.employee_profile
+    except Employee.DoesNotExist:
+        return None
+
+
+def _check_employee_permission(employee, permission_name):
+    """Check if employee has a specific permission"""
+    if not employee:
+        return False
+    return getattr(employee, permission_name, False)
+
+
+@staff_login_required
+def employee_list(request):
+    """List all employees - only superusers can access"""
+    if not request.user.is_superuser:
+        messages.error(request, 'You do not have permission to view employees.')
+        return redirect('dashboard')
+    
+    employees = Employee.objects.all().select_related('user', 'manager', 'reports_to')
+    
+    # Filtering
+    department_filter = request.GET.get('department', '')
+    status_filter = request.GET.get('status', '')
+    search_query = request.GET.get('q', '')
+    
+    if department_filter:
+        employees = employees.filter(department=department_filter)
+    if status_filter:
+        employees = employees.filter(status=status_filter)
+    if search_query:
+        employees = employees.filter(
+            Q(first_name__icontains=search_query) |
+            Q(last_name__icontains=search_query) |
+            Q(email__icontains=search_query) |
+            Q(employee_id__icontains=search_query) |
+            Q(position__icontains=search_query)
+        )
+    
+    # Pagination
+    paginator = Paginator(employees, 20)
+    page = request.GET.get('page', 1)
+    try:
+        employees = paginator.page(page)
+    except PageNotAnInteger:
+        employees = paginator.page(1)
+    except EmptyPage:
+        employees = paginator.page(paginator.num_pages)
+    
+    context = {
+        'employees': employees,
+        'departments': Employee.DEPARTMENT_CHOICES,
+        'statuses': Employee.STATUS_CHOICES,
+        'department_filter': department_filter,
+        'status_filter': status_filter,
+        'search_query': search_query,
+    }
+    
+    return render(request, 'crm/employee_list.html', context)
+
+
+@staff_login_required
+@user_passes_test(lambda u: u.is_superuser)
+def employee_create(request):
+    """Create a new employee - only superusers"""
+    if request.method == 'POST':
+        form = EmployeeForm(request.POST, request.FILES)
+        if form.is_valid():
+            employee = form.save(commit=False)
+            employee.created_by = request.user
+            employee.save()
+            messages.success(request, f'Employee {employee.get_full_name()} has been created successfully!')
+            return redirect('employee_list')
+    else:
+        form = EmployeeForm()
+    
+    return render(request, 'crm/employee_form.html', {'form': form, 'action': 'Create'})
+
+
+@staff_login_required
+@user_passes_test(lambda u: u.is_superuser)
+def employee_detail(request, pk):
+    """View employee details"""
+    employee = get_object_or_404(Employee, pk=pk)
+    
+    # Get employee's tasks
+    tasks = Task.objects.filter(assigned_to=employee.user)
+    
+    # Get employee's tickets
+    tickets = SupportTicket.objects.filter(assigned_to=employee.user)
+    
+    context = {
+        'employee': employee,
+        'tasks': tasks[:10],  # Recent 10 tasks
+        'tickets': tickets[:10],  # Recent 10 tickets
+    }
+    
+    return render(request, 'crm/employee_detail.html', context)
+
+
+@staff_login_required
+@user_passes_test(lambda u: u.is_superuser)
+def employee_update(request, pk):
+    """Update employee - only superusers"""
+    employee = get_object_or_404(Employee, pk=pk)
+    
+    if request.method == 'POST':
+        form = EmployeeForm(request.POST, request.FILES, instance=employee)
+        if form.is_valid():
+            form.save()
+            messages.success(request, f'Employee {employee.get_full_name()} has been updated successfully!')
+            return redirect('employee_detail', pk=employee.pk)
+    else:
+        form = EmployeeForm(instance=employee)
+    
+    return render(request, 'crm/employee_form.html', {'form': form, 'action': 'Update', 'employee': employee})
+
+
+@staff_login_required
+@user_passes_test(lambda u: u.is_superuser)
+def employee_delete(request, pk):
+    """Delete employee - only superusers"""
+    employee = get_object_or_404(Employee, pk=pk)
+    
+    if request.method == 'POST':
+        employee_name = employee.get_full_name()
+        employee.delete()
+        messages.success(request, f'Employee {employee_name} has been deleted successfully!')
+        return redirect('employee_list')
+    
+    return render(request, 'crm/employee_confirm_delete.html', {'employee': employee})
+
+
+@staff_login_required
+def employee_dashboard(request):
+    """Employee-specific dashboard with limited access"""
+    employee = _get_employee_profile(request.user)
+    
+    if not employee:
+        # If user is staff but not an employee, redirect to regular dashboard
+        if request.user.is_superuser:
+            return redirect('dashboard')
+        messages.error(request, 'Employee profile not found.')
+        return redirect('staff_login')
+    
+    # Get data based on employee permissions
+    context = {
+        'employee': employee,
+    }
+    
+    # Customers (if permission)
+    if employee.can_view_customers:
+        context['total_customers'] = Customer.objects.count()
+        context['recent_customers'] = Customer.objects.all()[:5]
+    
+    # Orders (if permission)
+    if employee.can_view_orders:
+        context['total_orders'] = Order.objects.count()
+        context['recent_orders'] = Order.objects.all()[:5]
+        context['pending_orders'] = Order.objects.filter(status='pending').count()
+    
+    # Products (if permission)
+    if employee.can_view_products:
+        context['total_products'] = Product.objects.count()
+        context['low_stock_products'] = Product.objects.filter(
+            stock_quantity__lte=F('min_stock_level')
+        ).count()
+    
+    # Tasks (if permission)
+    if employee.can_manage_tasks:
+        context['my_tasks'] = Task.objects.filter(assigned_to=request.user)[:10]
+        context['overdue_tasks'] = Task.objects.filter(
+            assigned_to=request.user,
+            status__in=['pending', 'in_progress'],
+            due_date__lt=timezone.now().date()
+        ).count()
+    
+    # Tickets (if permission)
+    if employee.can_manage_tickets:
+        context['my_tickets'] = SupportTicket.objects.filter(assigned_to=request.user)[:10]
+        context['open_tickets'] = SupportTicket.objects.filter(
+            assigned_to=request.user,
+            status__in=['open', 'in_progress']
+        ).count()
+    
+    return render(request, 'crm/employee_dashboard.html', context)
 
 
 # ============================================

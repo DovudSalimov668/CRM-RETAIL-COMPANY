@@ -1,0 +1,238 @@
+{% extends 'crm/base.html' %}
+{% load static %}
+{% block title %}Employee Dashboard - Retail CRM{% endblock %}
+{% block content %}
+{% with full_name=employee.get_full_name|default:request.user.username %}
+<section class="dashboard-hero gradient-card">
+    <div class="hero-copy">
+        <div class="d-flex align-items-center gap-3">
+            {% if employee.profile_image %}
+            <img src="{{ employee.profile_image.url }}" alt="Profile avatar" class="avatar-hero" onerror="this.src='https://ui-avatars.com/api/?name={{ full_name|urlencode }}&background=ffffff&color=5a1a8b&size=64'">
+            {% else %}
+            <img src="https://ui-avatars.com/api/?name={{ full_name|urlencode }}&background=ffffff&color=5a1a8b&size=64" alt="Profile avatar" class="avatar-hero">
+            {% endif %}
+            <div>
+                <p class="hero-label">Employee Portal</p>
+                <div class="hero-title">Welcome, {{ full_name }}.</div>
+                <p class="mb-0">{{ employee.position|default:"Employee" }} - {{ employee.get_department_display }}</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<div class="metrics-row">
+    {% if employee.can_view_customers %}
+    <div class="stat-card gradient-blue">
+        <div class="stat-icon"><i class="fas fa-users"></i></div>
+        <div class="stat-content">
+            <div class="stat-label">Total Customers</div>
+            <div class="stat-value">{{ total_customers|default:0 }}</div>
+        </div>
+    </div>
+    {% endif %}
+    
+    {% if employee.can_view_orders %}
+    <div class="stat-card gradient-pink">
+        <div class="stat-icon"><i class="fas fa-shopping-cart"></i></div>
+        <div class="stat-content">
+            <div class="stat-label">Total Orders</div>
+            <div class="stat-value">{{ total_orders|default:0 }}</div>
+        </div>
+    </div>
+    
+    <div class="stat-card gradient-green">
+        <div class="stat-icon"><i class="fas fa-clock"></i></div>
+        <div class="stat-content">
+            <div class="stat-label">Pending Orders</div>
+            <div class="stat-value">{{ pending_orders|default:0 }}</div>
+        </div>
+    </div>
+    {% endif %}
+    
+    {% if employee.can_view_products %}
+    <div class="stat-card gradient-blue">
+        <div class="stat-icon"><i class="fas fa-box"></i></div>
+        <div class="stat-content">
+            <div class="stat-label">Total Products</div>
+            <div class="stat-value">{{ total_products|default:0 }}</div>
+        </div>
+    </div>
+    
+    {% if low_stock_products %}
+    <div class="stat-card gradient-pink">
+        <div class="stat-icon"><i class="fas fa-exclamation-triangle"></i></div>
+        <div class="stat-content">
+            <div class="stat-label">Low Stock Items</div>
+            <div class="stat-value">{{ low_stock_products }}</div>
+        </div>
+    </div>
+    {% endif %}
+    {% endif %}
+    
+    {% if employee.can_manage_tasks %}
+    <div class="stat-card gradient-green">
+        <div class="stat-icon"><i class="fas fa-tasks"></i></div>
+        <div class="stat-content">
+            <div class="stat-label">My Tasks</div>
+            <div class="stat-value">{{ my_tasks|length|default:0 }}</div>
+        </div>
+    </div>
+    
+    {% if overdue_tasks %}
+    <div class="stat-card gradient-pink">
+        <div class="stat-icon"><i class="fas fa-exclamation-circle"></i></div>
+        <div class="stat-content">
+            <div class="stat-label">Overdue Tasks</div>
+            <div class="stat-value">{{ overdue_tasks }}</div>
+        </div>
+    </div>
+    {% endif %}
+    {% endif %}
+    
+    {% if employee.can_manage_tickets %}
+    <div class="stat-card gradient-blue">
+        <div class="stat-icon"><i class="fas fa-ticket-alt"></i></div>
+        <div class="stat-content">
+            <div class="stat-label">My Tickets</div>
+            <div class="stat-value">{{ my_tickets|length|default:0 }}</div>
+        </div>
+    </div>
+    
+    {% if open_tickets %}
+    <div class="stat-card gradient-pink">
+        <div class="stat-icon"><i class="fas fa-inbox"></i></div>
+        <div class="stat-content">
+            <div class="stat-label">Open Tickets</div>
+            <div class="stat-value">{{ open_tickets }}</div>
+        </div>
+    </div>
+    {% endif %}
+    {% endif %}
+</div>
+
+<div class="row mt-4">
+    {% if employee.can_view_customers and recent_customers %}
+    <div class="col-md-6 mb-4">
+        <section class="data-card">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h5 class="mb-0"><i class="fas fa-users me-2"></i>Recent Customers</h5>
+                <a href="{% url 'customer_list' %}" class="btn btn-sm btn-outline-primary">View All</a>
+            </div>
+            <div class="table-responsive">
+                <table class="table table-sm table-hover">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for customer in recent_customers %}
+                        <tr>
+                            <td><a href="{% url 'customer_detail' customer.pk %}">{{ customer.get_full_name }}</a></td>
+                            <td><span class="badge bg-info">{{ customer.get_status_display }}</span></td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    </div>
+    {% endif %}
+    
+    {% if employee.can_view_orders and recent_orders %}
+    <div class="col-md-6 mb-4">
+        <section class="data-card">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h5 class="mb-0"><i class="fas fa-shopping-cart me-2"></i>Recent Orders</h5>
+                <a href="{% url 'order_list' %}" class="btn btn-sm btn-outline-primary">View All</a>
+            </div>
+            <div class="table-responsive">
+                <table class="table table-sm table-hover">
+                    <thead>
+                        <tr>
+                            <th>Order</th>
+                            <th>Status</th>
+                            <th>Amount</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for order in recent_orders %}
+                        <tr>
+                            <td><a href="{% url 'order_detail' order.pk %}">{{ order.order_number }}</a></td>
+                            <td><span class="badge bg-info">{{ order.get_status_display }}</span></td>
+                            <td>${{ order.total_amount|floatformat:2 }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    </div>
+    {% endif %}
+    
+    {% if employee.can_manage_tasks and my_tasks %}
+    <div class="col-md-6 mb-4">
+        <section class="data-card">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h5 class="mb-0"><i class="fas fa-tasks me-2"></i>My Tasks</h5>
+                <a href="{% url 'task_list' %}" class="btn btn-sm btn-outline-primary">View All</a>
+            </div>
+            <div class="table-responsive">
+                <table class="table table-sm table-hover">
+                    <thead>
+                        <tr>
+                            <th>Task</th>
+                            <th>Status</th>
+                            <th>Due Date</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for task in my_tasks %}
+                        <tr>
+                            <td><a href="{% url 'task_update' task.pk %}">{{ task.title|truncatewords:5 }}</a></td>
+                            <td><span class="badge bg-info">{{ task.get_status_display }}</span></td>
+                            <td>{{ task.due_date|date:"M d" }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    </div>
+    {% endif %}
+    
+    {% if employee.can_manage_tickets and my_tickets %}
+    <div class="col-md-6 mb-4">
+        <section class="data-card">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h5 class="mb-0"><i class="fas fa-ticket-alt me-2"></i>My Tickets</h5>
+                <a href="{% url 'ticket_list' %}" class="btn btn-sm btn-outline-primary">View All</a>
+            </div>
+            <div class="table-responsive">
+                <table class="table table-sm table-hover">
+                    <thead>
+                        <tr>
+                            <th>Ticket</th>
+                            <th>Status</th>
+                            <th>Priority</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for ticket in my_tickets %}
+                        <tr>
+                            <td><a href="{% url 'ticket_detail' ticket.pk %}">{{ ticket.ticket_number }}</a></td>
+                            <td><span class="badge bg-info">{{ ticket.get_status_display }}</span></td>
+                            <td><span class="badge bg-warning">{{ ticket.get_priority_display }}</span></td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    </div>
+    {% endif %}
+</div>
+{% endwith %}
+{% endblock %}
+

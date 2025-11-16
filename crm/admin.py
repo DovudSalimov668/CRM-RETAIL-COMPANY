@@ -6,7 +6,8 @@ from .models import (
     Customer, Product, Order, OrderItem, Interaction, Task, Deal, Quote,
     CustomerSegment, CustomerRFM, CommunicationPreference, MarketingCampaign,
     LoyaltyProgram, LoyaltyTransaction, SupportTicket, TicketMessage,
-    CustomerFeedback, AutomationWorkflow, CartAbandonment, CustomerAnalytics
+    CustomerFeedback, AutomationWorkflow, CartAbandonment, CustomerAnalytics,
+    Employee
 )
 
 
@@ -239,3 +240,38 @@ class OTPCodeAdmin(admin.ModelAdmin):
         return obj.is_expired()
     is_expired.boolean = True
     is_expired.short_description = 'Expired'
+
+
+@admin.register(Employee)
+class EmployeeAdmin(admin.ModelAdmin):
+    list_display = ['employee_id', 'first_name', 'last_name', 'email', 'department', 'role', 'status', 'hire_date']
+    list_filter = ['department', 'role', 'status', 'hire_date']
+    search_fields = ['employee_id', 'first_name', 'last_name', 'email', 'position']
+    list_editable = ['status']
+    date_hierarchy = 'hire_date'
+    fieldsets = (
+        ('Basic Information', {
+            'fields': ('employee_id', 'first_name', 'last_name', 'email', 'phone', 'profile_image')
+        }),
+        ('Employment Details', {
+            'fields': ('department', 'role', 'position', 'status', 'hire_date', 'termination_date')
+        }),
+        ('Reporting Structure', {
+            'fields': ('manager', 'reports_to')
+        }),
+        ('Address', {
+            'fields': ('address', 'city', 'state', 'country', 'postal_code')
+        }),
+        ('Additional Info', {
+            'fields': ('bio', 'notes')
+        }),
+        ('Permissions', {
+            'fields': (
+                'can_view_customers', 'can_edit_customers',
+                'can_view_orders', 'can_edit_orders',
+                'can_view_products', 'can_edit_products',
+                'can_view_reports', 'can_manage_tasks',
+                'can_manage_tickets', 'can_view_analytics'
+            )
+        }),
+    )

@@ -40,9 +40,9 @@
                         <li class="nav-item dropdown">
                             <a class="nav-link dropdown-toggle d-flex align-items-center" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                               {% if customer_profile and customer_profile.profile_image %}
-                                <img src="{{ customer_profile.profile_image.url }}" alt="Profile Photo" style="width:32px;height:32px;border-radius:50%;object-fit:cover;margin-right:7px;background:#111;">
+                                <img src="{{ customer_profile.profile_image.url }}" alt="Profile Photo" class="avatar-sm me-2" onerror="this.src='https://ui-avatars.com/api/?name={{ request.user.get_full_name|urlencode }}&background=5a1a8b&color=fff&size=32'; this.onerror=null;">
                               {% else %}
-                                <img src="https://ui-avatars.com/api/?name={{ request.user.get_full_name|urlencode }}&background=5a1a8b&color=fff&size=32" alt="Avatar" style="width:32px;height:32px;border-radius:50%;object-fit:cover;margin-right:7px;background:#111;">
+                                <img src="https://ui-avatars.com/api/?name={{ request.user.get_full_name|urlencode }}&background=5a1a8b&color=fff&size=32" alt="Avatar" class="avatar-sm me-2">
                               {% endif %}
                               <span>{{ customer_profile.get_full_name|default:request.user.get_full_name|default:request.user.email }}</span>
                             </a>

@@ -12,9 +12,9 @@
 <section class="dashboard-hero gradient-card">
     <div class="hero-copy">
         <div class="d-flex align-items-center gap-3">
-            <img src="https://ui-avatars.com/api/?name={{ full_name|urlencode }}&background=ffffff&color=5a1a8b&size=64" alt="Profile avatar" class="avatar-sm" style="border:3px solid rgba(255,255,255,0.4);">
+            <img src="https://ui-avatars.com/api/?name={{ full_name|urlencode }}&background=ffffff&color=5a1a8b&size=64" alt="Profile avatar" class="avatar-hero">
             <div>
-                <p class="mb-1 text-uppercase fw-semibold" style="letter-spacing: 0.15em; color: rgba(255,255,255,0.65);">Today</p>
+                <p class="hero-label">Today</p>
                 <div class="hero-title">Welcome back, {{ full_name }}.</div>
                 <p class="mb-0">Here’s a quick look at how Retail CRM is performing right now.</p>
             </div>
@@ -63,7 +63,7 @@
         </div>
     </div>
     <div class="col-xxl-3 col-md-6">
-        <div class="stat-card" style="background: linear-gradient(135deg, #f5576c, #f093fb);">
+        <div class="stat-card gradient-card gradient-pink">
             <div class="d-flex justify-content-between align-items-center mb-2">
                 <span class="text-uppercase small fw-semibold">Orders</span>
                 <i class="fas fa-shopping-cart"></i>
@@ -76,22 +76,20 @@
         </div>
     </div>
     <div class="col-xxl-3 col-md-6">
-        <div class="stat-card" style="background: linear-gradient(135deg, #4facfe, #00f2fe);">
+        <div class="stat-card gradient-card gradient-blue">
             <div class="d-flex justify-content-between align-items-center mb-2">
                 <span class="text-uppercase small fw-semibold">Revenue</span>
                 <i class="fas fa-dollar-sign"></i>
             </div>
             <h3>${{ total_revenue|floatformat:0 }}</h3>
-            <p class="mb-2">This month ${{ this_month_revenue|floatformat:0 }}</p>
+            <p class="mb-2">This month ${{ this_month_revenue|floatformat:0|default:"0" }}</p>
             <span class="trend positive">
-                <i class="fas fa-arrow-trend-up"></i> ${{
-                    this_month_revenue|floatformat:0|default:"0"
-                }} this month
+                <i class="fas fa-arrow-trend-up"></i> ${{ this_month_revenue|floatformat:0|default:"0" }} this month
             </span>
         </div>
     </div>
     <div class="col-xxl-3 col-md-6">
-        <div class="stat-card" style="background: linear-gradient(135deg, #43e97b, #38f9d7);">
+        <div class="stat-card gradient-card gradient-green">
             <div class="d-flex justify-content-between align-items-center mb-2">
                 <span class="text-uppercase small fw-semibold">Deals pipeline</span>
                 <i class="fas fa-handshake"></i>

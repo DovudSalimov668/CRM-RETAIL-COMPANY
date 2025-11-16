@@ -19,6 +19,14 @@ urlpatterns = [
     # Staff Registration (only for superusers)
     path('staff/register/', views.staff_register, name='staff_register'),
     
+    # Employee Management (only for superusers)
+    path('employees/', views.employee_list, name='employee_list'),
+    path('employees/create/', views.employee_create, name='employee_create'),
+    path('employees/<int:pk>/', views.employee_detail, name='employee_detail'),
+    path('employees/<int:pk>/update/', views.employee_update, name='employee_update'),
+    path('employees/<int:pk>/delete/', views.employee_delete, name='employee_delete'),
+    path('employee/dashboard/', views.employee_dashboard, name='employee_dashboard'),
+    
     # Customer Portal
     path('portal/', views.customer_portal, name='customer_portal'),
     

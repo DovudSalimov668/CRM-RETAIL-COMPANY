@@ -65,6 +65,115 @@ class StaffRegistrationForm(UserCreationForm):
         return user
 
 
+class EmployeeForm(forms.ModelForm):
+    """Form for creating/editing employees"""
+    username = forms.CharField(max_length=150, required=True, widget=forms.TextInput(attrs={'class': 'form-control'}))
+    email = forms.EmailField(required=True, widget=forms.EmailInput(attrs={'class': 'form-control'}))
+    password = forms.CharField(
+        required=False,
+        widget=forms.PasswordInput(attrs={'class': 'form-control'}),
+        help_text="Leave blank to keep existing password, or enter new password"
+    )
+    
+    class Meta:
+        from .models import Employee
+        model = Employee
+        fields = [
+            'username', 'email', 'password', 'first_name', 'last_name', 'phone',
+            'employee_id', 'department', 'role', 'position', 'status',
+            'hire_date', 'manager', 'reports_to',
+            'address', 'city', 'state', 'country', 'postal_code',
+            'bio', 'notes', 'profile_image',
+            'can_view_customers', 'can_edit_customers',
+            'can_view_orders', 'can_edit_orders',
+            'can_view_products', 'can_edit_products',
+            'can_view_reports', 'can_manage_tasks',
+            'can_manage_tickets', 'can_view_analytics'
+        ]
+        widgets = {
+            'first_name': forms.TextInput(attrs={'class': 'form-control'}),
+            'last_name': forms.TextInput(attrs={'class': 'form-control'}),
+            'phone': forms.TextInput(attrs={'class': 'form-control'}),
+            'employee_id': forms.TextInput(attrs={'class': 'form-control'}),
+            'department': forms.Select(attrs={'class': 'form-select'}),
+            'role': forms.Select(attrs={'class': 'form-select'}),
+            'position': forms.TextInput(attrs={'class': 'form-control'}),
+            'status': forms.Select(attrs={'class': 'form-select'}),
+            'hire_date': forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}),
+            'manager': forms.Select(attrs={'class': 'form-select'}),
+            'reports_to': forms.Select(attrs={'class': 'form-select'}),
+            'address': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
+            'city': forms.TextInput(attrs={'class': 'form-control'}),
+            'state': forms.TextInput(attrs={'class': 'form-control'}),
+            'country': forms.TextInput(attrs={'class': 'form-control'}),
+            'postal_code': forms.TextInput(attrs={'class': 'form-control'}),
+            'bio': forms.Textarea(attrs={'class': 'form-control', 'rows': 4}),
+            'notes': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
+            'profile_image': forms.FileInput(attrs={'class': 'form-control'}),
+        }
+    
+    def __init__(self, *args, **kwargs):
+        instance = kwargs.get('instance')
+        super().__init__(*args, **kwargs)
+        
+        # Pre-fill username and email from user if editing
+        if instance and instance.user:
+            self.fields['username'].initial = instance.user.username
+            self.fields['email'].initial = instance.user.email
+            self.fields['username'].widget.attrs['readonly'] = True
+        
+        # Filter managers to only show employees
+        from .models import Employee
+        self.fields['manager'].queryset = Employee.objects.filter(status='active')
+        self.fields['reports_to'].queryset = User.objects.filter(is_staff=True)
+    
+    def clean_email(self):
+        email = self.cleaned_data.get('email')
+        instance = self.instance
+        if instance and instance.user:
+            # If editing, allow same email
+            if User.objects.filter(email=email).exclude(pk=instance.user.pk).exists():
+                raise forms.ValidationError("A user with this email already exists.")
+        else:
+            # If creating, check if email exists
+            if User.objects.filter(email=email).exists():
+                raise forms.ValidationError("A user with this email already exists.")
+        return email
+    
+    def save(self, commit=True):
+        from .models import Employee
+        from django.contrib.auth import get_user_model
+        User = get_user_model()
+        
+        employee = super().save(commit=False)
+        
+        if employee.pk:  # Editing existing employee
+            user = employee.user
+            user.email = self.cleaned_data['email']
+            if self.cleaned_data.get('password'):
+                user.set_password(self.cleaned_data['password'])
+            user.save()
+        else:  # Creating new employee
+            username = self.cleaned_data['username']
+            email = self.cleaned_data['email']
+            password = self.cleaned_data.get('password') or User.objects.make_random_password()
+            
+            user = User.objects.create_user(
+                username=username,
+                email=email,
+                password=password,
+                first_name=self.cleaned_data['first_name'],
+                last_name=self.cleaned_data['last_name'],
+                is_staff=True,
+                is_superuser=False  # Employees are not superusers
+            )
+            employee.user = user
+        
+        if commit:
+            employee.save()
+        return employee
+
+
 class CustomerForm(forms.ModelForm):
     class Meta:
         model = Customer

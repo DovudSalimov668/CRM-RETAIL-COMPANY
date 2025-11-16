@@ -70,9 +70,11 @@
                     <tr>
                         <td>
                             {% if product.image %}
-                                <img src="{{ product.image.url }}" alt="{{ product.name }}" style="height:40px;width:40px;object-fit:cover;border-radius:50%;background:#222;margin-right:8px;">
+                                <img src="{{ product.image.url }}" alt="{{ product.name }}" class="table-avatar" onerror="this.src='https://ui-avatars.com/api/?name={{ product.name|urlencode }}&background=5a1a8b&color=fff&size=40'; this.onerror=null;">
+                            {% elif product.image_url %}
+                                <img src="{{ product.image_url }}" alt="{{ product.name }}" class="table-avatar" onerror="this.src='https://ui-avatars.com/api/?name={{ product.name|urlencode }}&background=5a1a8b&color=fff&size=40'; this.onerror=null;">
                             {% else %}
-                                <img src="https://ui-avatars.com/api/?name={{ product.name|urlencode }}&background=5a1a8b&color=fff&size=40" alt="{{ product.name }}" style="height:40px;width:40px;object-fit:cover;border-radius:50%;background:#222;margin-right:8px;">
+                                <img src="https://ui-avatars.com/api/?name={{ product.name|urlencode }}&background=5a1a8b&color=fff&size=40" alt="{{ product.name }}" class="table-avatar">
                             {% endif %}
                         </td>
                         <td><strong>{{ product.name }}</strong></td>
