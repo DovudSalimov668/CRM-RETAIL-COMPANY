@@ -187,4 +187,38 @@ def verify_otp(email, code):
     except Exception as e:
         print(f"❌ Error verifying OTP: {e}")
         return None
+
+
+def resend_otp(email, user=None):
+    """
+    Resend OTP code - same as create_and_send_otp but with logging
+    """
+    try:
+        print(f"🔄 Resending OTP for {email}...")
+        # Delete any existing unused OTP codes for this email
+        deleted_count = OTPCode.objects.filter(email=email, is_used=False).delete()[0]
+        if deleted_count > 0:
+            print(f"Deleted {deleted_count} old OTP(s) for {email}")
+        # Generate new OTP
+        otp_code = generate_otp()
+        print(f"Generated new OTP: {otp_code} for {email}")
+        # Create OTP record
+        otp = OTPCode.objects.create(
+            email=email,
+            code=otp_code,
+            user=user,
+            expires_at=timezone.now() + timedelta(minutes=10)
+        )
+        print(f"New OTP record created. Expires at: {otp.expires_at}")
+        # Send OTP via Brevo
+        if send_otp_via_brevo(email, otp_code):
+            print(f"✅ OTP resent successfully to {email}")
+            return otp
+        else:
+            print(f"❌ Failed to resend OTP, deleting record for {email}")
+            otp.delete()
+            return None
+    except Exception as e:
+        print(f"❌ Error in resend_otp: {e}")
+        return None
         

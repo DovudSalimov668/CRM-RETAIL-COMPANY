@@ -907,19 +907,21 @@ def quote_update(request, pk):
 
 
 def staff_login_view(request):
-    """Staff/admin login view with email, password, and OTP"""
+    print("[STAFF LOGIN VIEW] Method:", request.method)
     if request.user.is_authenticated and request.user.is_staff:
         return redirect('dashboard')
 
-    from .otp_service import create_and_send_otp, verify_otp
+    from .otp_service import create_and_send_otp, verify_otp, resend_otp
 
     if request.method == 'POST':
         email = request.POST.get('email', '').strip()
         password = request.POST.get('password', '').strip()
         otp_code = request.POST.get('otp_code', '').strip()
         action = request.POST.get('action', '')
+        print(f"[STAFF LOGIN] POST start | action={action} | email={email} | password={'*' * len(password)} | otp_code={otp_code}")
 
         if action == 'send_otp':
+            print("[STAFF LOGIN] Handling send_otp")
             try:
                 user = User.objects.get(email=email)
                 if not user.is_staff:
@@ -942,6 +944,7 @@ def staff_login_view(request):
                 messages.error(request, f'An error occurred: {str(e)}')
 
         elif action == 'verify_otp':
+            print(f"[STAFF LOGIN] Handling verify_otp | email={email} | otp_code={otp_code}")
             email = request.session.get('login_email', '')
             if not email:
                 messages.error(request, 'Please request an OTP first.')
@@ -963,6 +966,7 @@ def staff_login_view(request):
                 messages.error(request, 'Invalid or expired OTP code. Please try again.')
 
         if action == 'resend_otp':
+            print(f"[STAFF LOGIN] Handling resend_otp for email={email}")
             email = request.session.get('login_email', '')
             if not email:
                 messages.error(request, 'Please request an OTP first.')
@@ -972,7 +976,7 @@ def staff_login_view(request):
                 if not user.is_staff:
                     messages.error(request, 'This account does not have staff access. Please use the customer login page.')
                     return redirect('customer_login')
-                otp = create_and_send_otp(email, user)
+                otp = resend_otp(email, user)
                 if otp:
                     messages.success(request, 'OTP code has been re-sent to your email.')
                 else:
@@ -1040,22 +1044,24 @@ def customer_register(request):
 
 
 def customer_login_view(request):
-    """Customer login view with email, password, and OTP"""
+    print("[CUSTOMER LOGIN VIEW] Method:", request.method)
     if request.user.is_authenticated:
         if request.user.is_staff:
             return redirect('dashboard')
         else:
             return redirect('customer_portal')
 
-    from .otp_service import create_and_send_otp, verify_otp
+    from .otp_service import create_and_send_otp, verify_otp, resend_otp
 
     if request.method == 'POST':
         email = request.POST.get('email', '').strip()
         password = request.POST.get('password', '').strip()
         otp_code = request.POST.get('otp_code', '').strip()
         action = request.POST.get('action', '')
+        print(f"[CUSTOMER LOGIN] POST start | action={action} | email={email} | password={'*' * len(password)} | otp_code={otp_code}")
 
         if action == 'send_otp':
+            print("[CUSTOMER LOGIN] Handling send_otp")
             try:
                 user = User.objects.get(email=email)
                 if user.is_staff:
@@ -1078,6 +1084,7 @@ def customer_login_view(request):
                 messages.error(request, f'An error occurred: {str(e)}')
 
         elif action == 'verify_otp':
+            print(f"[CUSTOMER LOGIN] Handling verify_otp | email={email} | otp_code={otp_code}")
             email = request.session.get('login_email', '')
             if not email:
                 messages.error(request, 'Please request an OTP first.')
@@ -1099,6 +1106,7 @@ def customer_login_view(request):
                 messages.error(request, 'Invalid or expired OTP code. Please try again.')
 
         if action == 'resend_otp':
+            print(f"[CUSTOMER LOGIN] Handling resend_otp for email={email}")
             email = request.session.get('login_email', '')
             if not email:
                 messages.error(request, 'Please request an OTP first.')
@@ -1108,7 +1116,7 @@ def customer_login_view(request):
                 if user.is_staff:
                     messages.error(request, 'Please use the staff login page to access the admin portal.')
                     return redirect('staff_login')
-                otp = create_and_send_otp(email, user)
+                otp = resend_otp(email, user)
                 if otp:
                     messages.success(request, 'OTP code has been re-sent to your email.')
                 else:
