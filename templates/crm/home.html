@@ -67,77 +67,100 @@
     <header class="hero container">
         <div class="row justify-content-center">
             <div class="col-md-10 col-lg-9">
-                <h1 class="display-4 mb-4">A serious CRM for modern teams and happy customers</h1>
-                <p class="mb-4">Manage customers, products, orders, tasks, deals, and quotes in one streamlined workspace. Clear access for staff and a delightful portal for customers.</p>
+                <h1 class="display-4 mb-4">Enterprise-Grade Customer Relationship Management</h1>
+                <p class="mb-4">Streamline your retail operations with a comprehensive CRM solution that unifies customer management, order processing, inventory control, and sales analytics in a single, secure platform.</p>
                 <div class="d-flex justify-content-center gap-2 flex-wrap">
                     {% if user.is_authenticated %}
                         {% if user.is_staff %}
                             <a href="{% url 'dashboard' %}" class="btn btn-primary btn-lg">
-                                <i class="fas fa-arrow-right"></i> Enter your workspace
+                                <i class="fas fa-tachometer-alt"></i> Access Dashboard
                             </a>
                         {% else %}
                             <a href="{% url 'customer_portal' %}" class="btn btn-primary btn-lg">
-                                <i class="fas fa-arrow-right"></i> Enter your workspace
+                                <i class="fas fa-user-circle"></i> Customer Portal
                             </a>
                         {% endif %}
                     {% else %}
                         <a href="{% url 'login_choice' %}" class="btn btn-primary btn-lg">
-                            <i class="fas fa-right-to-bracket"></i> Get started
+                            <i class="fas fa-sign-in-alt"></i> Sign In
                         </a>
                     {% endif %}
                     <a href="{% url 'docs' %}" class="btn btn-outline-light btn-lg">
-                        <i class="fas fa-book"></i> Read the docs
+                        <i class="fas fa-book"></i> Documentation
                     </a>
                 </div>
             </div>
         </div>
     </header>
+    
     <section class="container mb-5">
         <div class="row g-4">
-            <div class="col-md-4">
+            <div class="col-md-6 col-lg-4">
                 <div class="p-4 glass h-100">
-                    <div class="feature-icon mb-3"><i class="fas fa-user-shield"></i></div>
-                    <h5 class="mb-2">Clear role access</h5>
-                    <p class="mb-0">Separate staff and customer experiences. Staff manage, customers shop and track orders securely.</p>
+                    <div class="feature-icon mb-3"><i class="fas fa-users-cog"></i></div>
+                    <h5 class="mb-3">Role-Based Access Control</h5>
+                    <p class="mb-0">Enterprise-grade security with distinct interfaces for administrative staff and customers. Granular permissions ensure data integrity and operational efficiency.</p>
                 </div>
             </div>
-            <div class="col-md-4">
+            <div class="col-md-6 col-lg-4">
                 <div class="p-4 glass h-100">
-                    <div class="feature-icon mb-3"><i class="fas fa-diagram-project"></i></div>
-                    <h5 class="mb-2">End-to-end CRM</h5>
-                    <p class="mb-0">Customers, products, orders, tasks, deals, quotes, analytics and exports—ready to use.</p>
+                    <div class="feature-icon mb-3"><i class="fas fa-sitemap"></i></div>
+                    <h5 class="mb-3">Comprehensive Business Management</h5>
+                    <p class="mb-0">Integrated modules for customer profiles, product catalogs, order fulfillment, task management, sales pipelines, quotations, and advanced reporting capabilities.</p>
                 </div>
             </div>
-            <div class="col-md-4">
+            <div class="col-md-6 col-lg-4">
                 <div class="p-4 glass h-100">
-                    <div class="feature-icon mb-3"><i class="fas fa-palette"></i></div>
-                    <h5 class="mb-2">Professional dark theme</h5>
-                    <p class="mb-0">Serious, minimal, and accessible. Dark purple/black palette tuned for clarity and focus.</p>
+                    <div class="feature-icon mb-3"><i class="fas fa-chart-line"></i></div>
+                    <h5 class="mb-3">Advanced Analytics & Insights</h5>
+                    <p class="mb-0">Real-time business intelligence with RFM analysis, customer segmentation, sales performance metrics, and comprehensive data export functionality.</p>
+                </div>
+            </div>
+            <div class="col-md-6 col-lg-4">
+                <div class="p-4 glass h-100">
+                    <div class="feature-icon mb-3"><i class="fas fa-shopping-cart"></i></div>
+                    <h5 class="mb-3">E-Commerce Integration</h5>
+                    <p class="mb-0">Seamless customer portal with product browsing, shopping cart functionality, secure checkout, and order tracking for enhanced customer experience.</p>
+                </div>
+            </div>
+            <div class="col-md-6 col-lg-4">
+                <div class="p-4 glass h-100">
+                    <div class="feature-icon mb-3"><i class="fas fa-handshake"></i></div>
+                    <h5 class="mb-3">Sales Pipeline Management</h5>
+                    <p class="mb-0">Track deals, manage quotations, monitor conversion rates, and optimize your sales process with intelligent workflow automation.</p>
+                </div>
+            </div>
+            <div class="col-md-6 col-lg-4">
+                <div class="p-4 glass h-100">
+                    <div class="feature-icon mb-3"><i class="fas fa-shield-alt"></i></div>
+                    <h5 class="mb-3">Enterprise Security</h5>
+                    <p class="mb-0">Multi-factor authentication, secure session management, and encrypted data transmission to protect sensitive business and customer information.</p>
                 </div>
             </div>
         </div>
     </section>
+    
     <section class="container mb-5">
         <div class="glass p-4 p-md-5">
             <div class="row align-items-center">
                 <div class="col-md-8">
-                    <h4 class="mb-2">Ready to work</h4>
-                    <p class="mb-0">Jump straight to the right place. Choose Staff/Admin or Customer sign in on the next screen.</p>
+                    <h4 class="mb-3">Get Started Today</h4>
+                    <p class="mb-0">Access your workspace or create an account to begin managing your customer relationships with enterprise-level tools and insights.</p>
                 </div>
                 <div class="col-md-4 text-md-end mt-3 mt-md-0">
                     {% if user.is_authenticated %}
                         {% if user.is_staff %}
                             <a href="{% url 'dashboard' %}" class="btn btn-primary btn-lg">
-                                <i class="fas fa-arrow-right"></i> Open workspace
+                                <i class="fas fa-tachometer-alt"></i> Dashboard
                             </a>
                         {% else %}
                             <a href="{% url 'customer_portal' %}" class="btn btn-primary btn-lg">
-                                <i class="fas fa-arrow-right"></i> Open workspace
+                                <i class="fas fa-user-circle"></i> Portal
                             </a>
                         {% endif %}
                     {% else %}
                         <a href="{% url 'login_choice' %}" class="btn btn-primary btn-lg">
-                            <i class="fas fa-right-to-bracket"></i> Sign in
+                            <i class="fas fa-sign-in-alt"></i> Sign In
                         </a>
                     {% endif %}
                 </div>
@@ -145,9 +168,12 @@
         </div>
     </section>
     <footer class="container py-4">
-        <div class="d-flex justify-content-between">
-            <div>© {{ now|default:None|date:"Y" }} Retail CRM</div>
-            <div><a href="{% url 'docs' %}" class="text-decoration-none text-light">Documentation</a></div>
+        <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
+            <div>© {{ now|default:None|date:"Y" }} Retail CRM. All rights reserved.</div>
+            <div>
+                <a href="{% url 'docs' %}" class="text-decoration-none text-light me-3">Documentation</a>
+                <a href="{% url 'home' %}" class="text-decoration-none text-light">Home</a>
+            </div>
         </div>
     </footer>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
