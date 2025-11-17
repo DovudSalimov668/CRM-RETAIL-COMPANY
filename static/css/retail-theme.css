@@ -65,6 +65,22 @@ a:hover {
     letter-spacing: -0.5px;
 }
 
+.top-navbar .navbar-brand img,
+.customer-navbar .navbar-brand img {
+    height: 40px;
+    width: auto;
+    object-fit: contain;
+    display: block;
+}
+
+.navbar-brand img {
+    transition: transform 0.3s ease;
+}
+
+.navbar-brand:hover img {
+    transform: scale(1.05);
+}
+
 .top-navbar .nav-link,
 .customer-navbar .nav-link {
     color: var(--text-secondary);

@@ -75,7 +75,11 @@
 <body>
     <nav class="navbar navbar-expand-lg">
         <div class="container">
-            <a class="navbar-brand" href="{% url 'home' %}"><i class="fas fa-store"></i> Retail CRM</a>
+            <a class="navbar-brand d-flex align-items-center" href="{% url 'home' %}">
+                {% load static %}
+                <img src="{% static 'images/logo.svg' %}" alt="Retail CRM Logo" height="40" class="me-2">
+                <span class="d-none d-md-inline">Retail CRM</span>
+            </a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navMain" aria-controls="navMain" aria-expanded="false" aria-label="Toggle navigation">
                 <span class="navbar-toggler-icon"></span>
             </button>
