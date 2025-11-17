@@ -723,7 +723,7 @@ class Employee(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='employee_profile', null=True, blank=True)
     
     # Basic Information
-    employee_id = models.CharField(max_length=50, unique=True, help_text="Unique employee ID")
+    employee_id = models.CharField(max_length=50, unique=True, blank=True, help_text="Unique employee ID (auto-generated if not provided)")
     first_name = models.CharField(max_length=100)
     last_name = models.CharField(max_length=100)
     email = models.EmailField(unique=True)

@@ -1,11 +1,30 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
   <defs>
-    <linearGradient id="grad" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#764ba2"/>
-      <stop offset="100%" stop-color="#5a1a8b"/>
+    <!-- Gradient for tallest bar -->
+    <linearGradient id="magentaGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#e91e63;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#9c27b0;stop-opacity:1" />
     </linearGradient>
   </defs>
-  <rect width="64" height="64" rx="14" fill="url(#grad)"/>
-  <path d="M18 44c8-2 14-8 14-19h-7l13-17 13 17h-7c0 17-9 28-23 31z" fill="#ffffff" opacity="0.9"/>
+  
+  <!-- Background (optional subtle gradient) -->
+  <rect width="64" height="64" rx="12" fill="#0b0713"/>
+  
+  <!-- Growth Chart Bars (centered and scaled for favicon) -->
+  <!-- Left bar (shortest, dark purple) -->
+  <rect x="14" y="40" width="8" height="12" fill="#5a1a8b" rx="2"/>
+  
+  <!-- Middle bar (medium, vibrant purple) -->
+  <rect x="28" y="32" width="8" height="20" fill="#7a2aab" rx="2"/>
+  
+  <!-- Right bar (tallest, bright magenta) -->
+  <rect x="42" y="16" width="8" height="36" fill="url(#magentaGradient)" rx="2"/>
+  
+  <!-- Upward arrow (simplified for small size) -->
+  <path d="M 36 28 Q 40 20 44 18" stroke="url(#magentaGradient)" stroke-width="2" fill="none" stroke-linecap="round"/>
+  <path d="M 42 16 L 44 18 L 42 20" stroke="url(#magentaGradient)" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+  
+  <!-- Subtle decorative elements -->
+  <circle cx="12" cy="52" r="1.5" fill="#5a1a8b" opacity="0.6"/>
+  <circle cx="52" cy="12" r="1" fill="#e91e63" opacity="0.7"/>
 </svg>
-

@@ -72,7 +72,7 @@ class EmployeeForm(forms.ModelForm):
     password = forms.CharField(
         required=False,
         widget=forms.PasswordInput(attrs={'class': 'form-control'}),
-        help_text="Leave blank to keep existing password, or enter new password"
+        help_text="Required when creating new employee. Leave blank when editing to keep existing password."
     )
     
     class Meta:
@@ -80,7 +80,7 @@ class EmployeeForm(forms.ModelForm):
         model = Employee
         fields = [
             'username', 'email', 'password', 'first_name', 'last_name', 'phone',
-            'employee_id', 'department', 'role', 'position', 'status',
+            'department', 'role', 'position', 'status',
             'hire_date', 'manager', 'reports_to',
             'address', 'city', 'state', 'country', 'postal_code',
             'bio', 'notes', 'profile_image',
@@ -94,7 +94,6 @@ class EmployeeForm(forms.ModelForm):
             'first_name': forms.TextInput(attrs={'class': 'form-control'}),
             'last_name': forms.TextInput(attrs={'class': 'form-control'}),
             'phone': forms.TextInput(attrs={'class': 'form-control'}),
-            'employee_id': forms.TextInput(attrs={'class': 'form-control'}),
             'department': forms.Select(attrs={'class': 'form-select'}),
             'role': forms.Select(attrs={'class': 'form-select'}),
             'position': forms.TextInput(attrs={'class': 'form-control'}),
@@ -121,11 +120,29 @@ class EmployeeForm(forms.ModelForm):
             self.fields['username'].initial = instance.user.username
             self.fields['email'].initial = instance.user.email
             self.fields['username'].widget.attrs['readonly'] = True
+            self.fields['password'].required = False
+        else:
+            # When creating, password is optional (will be auto-generated if not provided)
+            self.fields['password'].required = False
         
         # Filter managers to only show employees
         from .models import Employee
         self.fields['manager'].queryset = Employee.objects.filter(status='active')
         self.fields['reports_to'].queryset = User.objects.filter(is_staff=True)
+    
+    def clean_username(self):
+        username = self.cleaned_data.get('username')
+        instance = self.instance
+        
+        if instance and instance.user:
+            # If editing, allow same username
+            if User.objects.filter(username=username).exclude(pk=instance.user.pk).exists():
+                raise forms.ValidationError("A user with this username already exists.")
+        else:
+            # If creating, check if username exists
+            if User.objects.filter(username=username).exists():
+                raise forms.ValidationError("A user with this username already exists.")
+        return username
     
     def clean_email(self):
         email = self.cleaned_data.get('email')
@@ -146,6 +163,11 @@ class EmployeeForm(forms.ModelForm):
         User = get_user_model()
         
         employee = super().save(commit=False)
+        
+        # Auto-generate employee_id if not set (should always be the case now)
+        if not employee.employee_id:
+            # This will be handled by the model's save method, but we ensure it's empty
+            pass
         
         if employee.pk:  # Editing existing employee
             user = employee.user
@@ -168,6 +190,7 @@ class EmployeeForm(forms.ModelForm):
                 is_superuser=False  # Employees are not superusers
             )
             employee.user = user
+            # Don't set employee_id - let the model's save() method auto-generate it
         
         if commit:
             employee.save()
