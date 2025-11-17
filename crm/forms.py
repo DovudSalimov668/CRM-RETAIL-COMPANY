@@ -145,16 +145,25 @@ class EmployeeForm(forms.ModelForm):
         return username
     
     def clean_email(self):
+        from .models import Employee
         email = self.cleaned_data.get('email')
         instance = self.instance
-        if instance and instance.user:
-            # If editing, allow same email
-            if User.objects.filter(email=email).exclude(pk=instance.user.pk).exists():
-                raise forms.ValidationError("A user with this email already exists.")
-        else:
-            # If creating, check if email exists
-            if User.objects.filter(email=email).exists():
-                raise forms.ValidationError("A user with this email already exists.")
+        
+        if email:
+            # Check if email is already used by another user
+            if instance and instance.user:
+                # If editing, allow same email for the same user
+                if User.objects.filter(email=email).exclude(pk=instance.user.pk).exists():
+                    raise forms.ValidationError("A user with this email already exists.")
+            else:
+                # If creating, check if email exists in User table
+                if User.objects.filter(email=email).exists():
+                    raise forms.ValidationError("A user with this email already exists.")
+            
+            # Check if email is already used by another employee
+            if Employee.objects.filter(email=email).exclude(pk=instance.pk if instance.pk else None).exists():
+                raise forms.ValidationError("An employee with this email already exists.")
+        
         return email
     
     def save(self, commit=True):

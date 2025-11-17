@@ -251,11 +251,12 @@ class EmployeeAdmin(admin.ModelAdmin):
     date_hierarchy = 'hire_date'
     fieldsets = (
         ('User Account', {
-            'fields': ('user', 'username', 'password'),
-            'description': 'Option 1: Select existing user. Option 2: Leave user blank and provide username/password to create new user.'
+            'fields': ('user', 'username', 'password', 'user_is_staff', 'user_is_superuser'),
+            'description': 'Option 1: Select existing user. Option 2: Leave user blank and provide username (password optional - will be auto-generated if blank).'
         }),
         ('Basic Information', {
-            'fields': ('employee_id', 'first_name', 'last_name', 'email', 'phone', 'profile_image')
+            'fields': ('employee_id', 'first_name', 'last_name', 'email', 'phone', 'profile_image'),
+            'description': 'Employee ID will be automatically generated when creating (format: EMP-0001, EMP-0002, etc.)'
         }),
         ('Employment Details', {
             'fields': ('department', 'role', 'position', 'status', 'hire_date', 'termination_date')
@@ -301,7 +302,17 @@ class EmployeeAdmin(admin.ModelAdmin):
                 password = forms.CharField(
                     required=False,
                     widget=forms.PasswordInput,
-                    help_text="Required if creating new user account."
+                    help_text="Optional. Leave blank to auto-generate a secure random password."
+                )
+                user_is_staff = forms.BooleanField(
+                    required=False,
+                    initial=True,
+                    help_text="Allow user to access admin interface. Usually checked for employees."
+                )
+                user_is_superuser = forms.BooleanField(
+                    required=False,
+                    initial=False,
+                    help_text="Give user full admin access. Usually unchecked for regular employees."
                 )
                 
                 class Meta:
@@ -310,28 +321,49 @@ class EmployeeAdmin(admin.ModelAdmin):
                 
                 def __init__(self, *args, **kwargs):
                     super().__init__(*args, **kwargs)
-                    # Make user field optional when creating
+                    # Make employee_id optional and hidden when creating (will be auto-generated)
                     if not self.instance.pk:
+                        if 'employee_id' in self.fields:
+                            self.fields['employee_id'].required = False
+                            self.fields['employee_id'].widget = forms.HiddenInput()
+                            self.fields['employee_id'].help_text = "Will be auto-generated"
+                        # Make user field optional when creating
                         self.fields['user'].required = False
                         self.fields['user'].help_text = "Select existing user or create new one below"
                     # Filter managers to show all employees
                     if 'manager' in self.fields:
                         self.fields['manager'].queryset = Employee.objects.all()
+                    # Make email required
+                    if 'email' in self.fields:
+                        self.fields['email'].required = True
+                
+                def clean_username(self):
+                    username = self.cleaned_data.get('username')
+                    if username:
+                        if User.objects.filter(username=username).exists():
+                            raise forms.ValidationError("A user with this username already exists.")
+                    return username
+                
+                def clean_email(self):
+                    email = self.cleaned_data.get('email')
+                    if email:
+                        # Check if email is already used by another user
+                        if User.objects.filter(email=email).exists():
+                            raise forms.ValidationError("A user with this email already exists.")
+                        # Check if email is already used by another employee
+                        if Employee.objects.filter(email=email).exclude(pk=self.instance.pk if self.instance.pk else None).exists():
+                            raise forms.ValidationError("An employee with this email already exists.")
+                    return email
                 
                 def clean(self):
                     cleaned_data = super().clean()
                     user = cleaned_data.get('user')
                     username = cleaned_data.get('username')
-                    password = cleaned_data.get('password')
                     
                     # If creating new employee without user
                     if not self.instance.pk:
                         if not user and not username:
                             raise forms.ValidationError("Either select an existing user or provide username to create new user account.")
-                        if username and not password:
-                            raise forms.ValidationError("Password is required when creating new user account.")
-                        if username and User.objects.filter(username=username).exists():
-                            raise forms.ValidationError("A user with this username already exists.")
                     
                     return cleaned_data
                 
@@ -339,19 +371,30 @@ class EmployeeAdmin(admin.ModelAdmin):
                     employee = super().save(commit=False)
                     username = self.cleaned_data.get('username')
                     password = self.cleaned_data.get('password')
+                    is_staff = self.cleaned_data.get('user_is_staff', True)
+                    is_superuser = self.cleaned_data.get('user_is_superuser', False)
                     
-                    # Create user if username and password provided
-                    if username and password and not employee.user:
+                    # Create user if username provided (password optional - will be auto-generated)
+                    if username and not employee.user:
+                        # Auto-generate password if not provided
+                        if not password:
+                            password = User.objects.make_random_password()
+                        
                         user = User.objects.create_user(
                             username=username,
                             email=employee.email,
                             password=password,
                             first_name=employee.first_name,
                             last_name=employee.last_name,
-                            is_staff=True,
-                            is_superuser=False
+                            is_staff=is_staff,
+                            is_superuser=is_superuser
                         )
                         employee.user = user
+                    
+                    # Ensure employee_id is empty so model's save() will auto-generate it
+                    # CharField with blank=True accepts empty string, which triggers auto-generation
+                    if not employee.employee_id or (isinstance(employee.employee_id, str) and employee.employee_id.strip() == ''):
+                        employee.employee_id = ''
                     
                     if commit:
                         employee.save()
@@ -359,8 +402,19 @@ class EmployeeAdmin(admin.ModelAdmin):
             
             return EmployeeAdminForm
         else:  # Editing existing employee
-            form = super().get_form(request, obj, **kwargs)
-            # When editing, allow selecting any employee as manager except self
-            if 'manager' in form.base_fields:
-                form.base_fields['manager'].queryset = Employee.objects.exclude(pk=obj.pk)
-            return form
+            class EmployeeEditForm(forms.ModelForm):
+                class Meta:
+                    model = Employee
+                    fields = '__all__'
+                
+                def __init__(self, *args, **kwargs):
+                    super().__init__(*args, **kwargs)
+                    # Make employee_id read-only when editing
+                    if 'employee_id' in self.fields:
+                        self.fields['employee_id'].widget.attrs['readonly'] = True
+                        self.fields['employee_id'].help_text = "Employee ID cannot be changed after creation."
+                    # When editing, allow selecting any employee as manager except self
+                    if 'manager' in self.fields:
+                        self.fields['manager'].queryset = Employee.objects.exclude(pk=obj.pk)
+            
+            return EmployeeEditForm
