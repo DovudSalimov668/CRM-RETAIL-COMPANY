@@ -125,9 +125,16 @@ class EmployeeForm(forms.ModelForm):
             # When creating, password is optional (will be auto-generated if not provided)
             self.fields['password'].required = False
         
-        # Filter managers to only show employees
+        # Filter managers to only show employees (allow all when creating since there might not be any yet)
         from .models import Employee
-        self.fields['manager'].queryset = Employee.objects.filter(status='active')
+        if instance and instance.pk:
+            # When editing, only show active employees (excluding self)
+            self.fields['manager'].queryset = Employee.objects.filter(status='active').exclude(pk=instance.pk)
+        else:
+            # When creating, show all active employees
+            self.fields['manager'].queryset = Employee.objects.filter(status='active')
+        
+        # Filter reports_to to show staff users
         self.fields['reports_to'].queryset = User.objects.filter(is_staff=True)
     
     def clean_username(self):
@@ -173,22 +180,19 @@ class EmployeeForm(forms.ModelForm):
         
         employee = super().save(commit=False)
         
-        # Auto-generate employee_id if not set (should always be the case now)
-        if not employee.employee_id:
-            # This will be handled by the model's save method, but we ensure it's empty
-            pass
-        
         if employee.pk:  # Editing existing employee
             user = employee.user
-            user.email = self.cleaned_data['email']
-            if self.cleaned_data.get('password'):
-                user.set_password(self.cleaned_data['password'])
-            user.save()
+            if user:
+                user.email = self.cleaned_data['email']
+                if self.cleaned_data.get('password'):
+                    user.set_password(self.cleaned_data['password'])
+                user.save()
         else:  # Creating new employee
             username = self.cleaned_data['username']
             email = self.cleaned_data['email']
             password = self.cleaned_data.get('password') or User.objects.make_random_password()
             
+            # Create the user account
             user = User.objects.create_user(
                 username=username,
                 email=email,
@@ -199,7 +203,9 @@ class EmployeeForm(forms.ModelForm):
                 is_superuser=False  # Employees are not superusers
             )
             employee.user = user
-            # Don't set employee_id - let the model's save() method auto-generate it
+            
+            # Ensure employee_id is empty so model's save() will auto-generate it
+            employee.employee_id = ''
         
         if commit:
             employee.save()

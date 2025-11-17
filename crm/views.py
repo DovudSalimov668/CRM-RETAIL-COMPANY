@@ -1365,11 +1365,16 @@ def employee_create(request):
     if request.method == 'POST':
         form = EmployeeForm(request.POST, request.FILES)
         if form.is_valid():
-            employee = form.save(commit=False)
-            employee.created_by = request.user
-            employee.save()
-            messages.success(request, f'Employee {employee.get_full_name()} has been created successfully!')
-            return redirect('employee_list')
+            try:
+                employee = form.save(commit=False)
+                employee.created_by = request.user
+                employee.save()
+                messages.success(request, f'Employee {employee.get_full_name()} (ID: {employee.employee_id}) has been created successfully!')
+                return redirect('employee_list')
+            except Exception as e:
+                messages.error(request, f'Error creating employee: {str(e)}')
+        else:
+            messages.error(request, 'Please correct the errors below.')
     else:
         form = EmployeeForm()
     

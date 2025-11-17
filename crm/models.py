@@ -789,17 +789,27 @@ class Employee(models.Model):
     
     def save(self, *args, **kwargs):
         # Auto-generate employee_id if not provided
-        if not self.employee_id:
-            # Generate unique employee ID
-            last_employee = Employee.objects.order_by('-id').first()
-            if last_employee and last_employee.employee_id:
+        if not self.employee_id or (isinstance(self.employee_id, str) and self.employee_id.strip() == ''):
+            # Generate unique employee ID by finding the highest existing number
+            # Query all employees with valid employee_id format
+            existing_ids = Employee.objects.exclude(
+                employee_id__isnull=True
+            ).exclude(
+                employee_id=''
+            ).filter(
+                employee_id__startswith='EMP-'
+            ).values_list('employee_id', flat=True)
+            
+            max_num = 0
+            for emp_id in existing_ids:
                 try:
-                    last_num = int(last_employee.employee_id.split('-')[-1])
-                    new_num = last_num + 1
-                except:
-                    new_num = 1
-            else:
-                new_num = 1
+                    num = int(emp_id.split('-')[-1])
+                    if num > max_num:
+                        max_num = num
+                except (ValueError, IndexError):
+                    continue
+            
+            new_num = max_num + 1
             self.employee_id = f"EMP-{new_num:04d}"
         
         # Set user as staff if employee is created and user exists
